@@ -201,19 +201,10 @@
 
 ```
 /pretix-infra
-├── /terraform              # Конфигурации для создания инфраструктуры
-├── /ansible                # Конфигурации для настройки серверов
-│   ├── /playbooks          # Сценарии для настройки сервисов
-│   ├── /roles              # Инструкции для настройки сервисов
-│   │   ├── nginx
-│   │   ├── docker
-│   │   ├── postgres
-│   │   ├── redis
-│   │   ├── grafana
-│   │   ├── loki
-│   │   ├── alloy
-│   │   ├── node_exporter
-│   │   └── postgres_exporter
+├── /terraform             # Конфигурации для создания инфраструктуры
+├── /ansible               # Конфигурации для настройки серверов
+│   ├── /playbooks         # Сценарии для настройки сервисов
+│   ├── /roles             # Инструкции для настройки сервисов
 │   ├── inventory.yml      # Список серверов
 │   ├── ansible.cfg        # Настройки Ansible
 │   └── requirements.yml   # Коллекции и роли из Ansible Galaxy
