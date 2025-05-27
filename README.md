@@ -1,93 +1,352 @@
-# Pretix Infra
+# Инфраструктура для проекта Pretix
 
+Этот репозиторий описывает начальную конфигурацию инфраструктуры как кода (IaC) для проекта **Pretix** — системы продажи билетов на мероприятия. Мы используем **Infrastructure as Code (IaC)** для автоматизации создания и настройки серверов в **Yandex Cloud**.
 
+> **Внимание!** В текущей версии не учтены разбивка по контейнерам, использование Kubernetes, вынос Pretix-worker в отдельные контейнеры и другие потенциальные улучшения. Эти аспекты могут быть добавлены в будущем.
 
-## Getting started
+## Обзор проекта
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+**Pretix** — веб-приложение для управления продажей билетов. Мы разворачиваем инфраструктуру в **Yandex Cloud** с использованием следующих инструментов:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- **Terraform**: Создаёт серверы и сети (не в фокусе этой задачи).
+- **Ansible**: Устанавливает и настраивает сервисы (NGINX, PostgreSQL, Prometheus и др.) с использованием коллекций.
+- **GitLab**: Хранит код и автоматизирует развертывание (CI/CD).
+- **Yandex Cloud**: Облачная платформа для серверов.
+- **Мониторинг**: 
+  - **Prometheus**: Собирает метрики, включая контейнеры через cAdvisor.
+  - **Экспортеры**: Node Exporter (системные метрики: CPU, память, диск), PostgreSQL Exporter (метрики базы данных).
+  - **Grafana**: Визуализирует метрики и логи.
+  - **AlertManager**: Отправляет уведомления.
+- **Логирование**: Alloy (сбор логов), Loki (хранение логов), Grafana (просмотр логов).
+- **Веб-сервер**: NGINX для обработки запросов.
+- **Контейнеры**: Docker для запуска Pretix.
 
-## Add your files
+## Вычислительные ресурсы
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+Используются **три виртуальные машины** (инстансы) в Yandex Cloud, на которых настраиваются сервисы через Ansible.
+
+### Список инстансов:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.pretix.devops-factory.com/pretix/pretix-infra.git
-git branch -M main
-git push -uf origin main
+Инстанс 1 (Frontend):
+  Сервисы:
+    - NGINX: Обрабатывает веб-запросы и перенаправляет их к Pretix.
+    - Docker (Pretix): Запускает приложение Pretix в контейнерах.
+    - Alloy: Собирает логи с этого инстанса.
+    - Node Exporter: Собирает системные метрики для Prometheus.
+  Сеть: Публичный IP для доступа пользователей к Pretix.
+  Terraform: Создаёт инстанс с публичным IP и доступом к интернету.
+  Ansible: Устанавливает NGINX, Docker, Alloy, Node Exporter с использованием коллекций; загружает образ Pretix, настраивает конфигурацию NGINX.
 ```
 
-## Integrate with your tools
+```
+Инстанс 2 (Backend):
+  Сервисы:
+    - PostgreSQL: Хранит данные о билетах, мероприятиях и пользователях.
+    - Redis: Кэширует данные для ускорения работы Pretix.
+    - Alloy: Собирает логи с этого инстанса.
+    - Node Exporter: Собирает системные метрики для Prometheus.
+    - PostgreSQL Exporter: Собирает метрики базы данных для Prometheus.
+  Сеть: Приватная подсеть для безопасности (без публичного IP).
+  Terraform: Создаёт инстанс в приватной подсети.
+  Ansible: Устанавливает PostgreSQL, Redis, Alloy, Node Exporter, PostgreSQL Exporter с использованием коллекций; настраивает базы и подключения.
+```
 
-- [ ] [Set up project integrations](https://gitlab.pretix.devops-factory.com/pretix/pretix-infra/-/settings/integrations)
+```
+Инстанс 3 (Monitoring & Logging):
+  Сервисы:
+    - Prometheus: Собирает метрики (например, метрики контейнеров через cAdvisor).
+    - Grafana: Показывает графики метрик и логов.
+    - AlertManager: Отправляет уведомления о сбоях (например, в Telegram).
+    - Loki: Хранит логи.
+    - Alloy: Собирает логи с этого инстанса.
+    - Node Exporter: Собирает системные метрики для Prometheus.
+  Сеть: Публичный IP для доступа к Grafana через браузер (или VPN для внутренней сети).
+  Terraform: Создаёт инстанс с публичным IP или в приватной подсети.
+  Ansible: Устанавливает Prometheus, Grafana, AlertManager, Loki, Alloy, Node Exporter с использованием коллекций; настраивает дашборды и алерты.
+```
 
-## Collaborate with your team
+## Примеры плейбуков Ansible
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+Ниже приведены примеры плейбуков Ansible, использующих модульный подход с коллекциями для настройки серверов в проекте Pretix, включая общий плейбук для выполнения всех настроек.
 
-## Test and Deploy
+### Плейбук: all-install.yml
+Этот плейбук включает все остальные плейбуки для последовательной настройки всех сервисов на инстансе.
 
-Use the built-in continuous integration in GitLab.
+```
+---
+- name: Install and configure all services for Pretix
+  hosts: all
+  become: yes
+  tasks:
+    - name: Include NGINX setup playbook
+      ansible.builtin.include: setup_nginx.yml
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+    - name: Include Docker setup playbook
+      ansible.builtin.include: setup_docker.yml
 
-***
+    - name: Include PostgreSQL setup playbook
+      ansible.builtin.include: setup_postgres.yml
 
-# Editing this README
+    - name: Include Redis setup playbook
+      ansible.builtin.include: setup_redis.yml
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+    - name: Include monitoring setup playbook
+      ansible.builtin.include: setup_monitoring.yml
 
-## Suggestions for a good README
+    - name: Include logging setup playbook
+      ansible.builtin.include: setup_logging.yml
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+**Объяснение**:
+- Плейбук применяется к группе `all`, так как каждый включённый плейбук таргетирует свою группу хостов (`frontend`, `backend`, `monitoring`).
+- Директива `ansible.builtin.include` вызывает указанные плейбуки в логическом порядке: сначала фронтенд (NGINX, Docker), затем бэкенд (PostgreSQL, Redis), затем мониторинг и логирование.
+- Используется `become: yes` для выполнения задач с правами root.
+- Позволяет выполнить все настройки одной командой, сохраняя модульность.
 
-## Name
-Choose a self-explaining name for your project.
+### Плейбук: setup_postgres.yml
+Это пример плейбука, который настраивает PostgreSQL на инстансе 2 (Backend), используя коллекцию `community.postgresql`.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```
+---
+- name: Configure PostgreSQL on Backend VM
+  hosts: backend
+  become: yes
+  collections:
+    - community.postgresql
+  roles:
+    - postgres
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+  tasks:
+    - name: Create Pretix database
+      postgresql_db:
+        name: pretix
+        state: present
+      become_user: postgres
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+    - name: Create Pretix user
+      postgresql_user:
+        name: pretix_user
+        password: "{{ pretix_db_password }}"
+        db: pretix
+        priv: ALL
+        state: present
+      become_user: postgres
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+**Объяснение**:
+- Плейбук применяется к группе `backend`.
+- Коллекция `community.postgresql` предоставляет модули для управления PostgreSQL.
+- Роль `postgres` (из `/roles/postgres`) устанавливает PostgreSQL и настраивает доступ.
+- Задачи создают базу `pretix` и пользователя `pretix_user` с правами.
+- Пароль хранится в переменной `pretix_db_password` (в vault или `vars`).
+- PostgreSQL Exporter настраивается отдельной ролью `postgres_exporter`.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Плейбук: setup_monitoring.yml
+Это пример плейбука, который настраивает Prometheus и Node Exporter на инстансе 3 (Monitoring & Logging), используя коллекцию `prometheus.prometheus`.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```
+---
+- name: Configure monitoring on Monitoring VM
+  hosts: monitoring
+  become: yes
+  collections:
+    - prometheus.prometheus
+  roles:
+    - prometheus
+    - node_exporter
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+  tasks:
+    - name: Configure Prometheus scrape targets
+      prometheus_scrape_config:
+        file: /etc/prometheus/prometheus.yml
+        scrape_configs:
+          - job_name: 'node'
+            static_configs:
+              - targets: ['localhost:9100']
+          - job_name: 'postgres'
+            static_configs:
+              - targets: ['backend:9187']
+      notify: Reload Prometheus
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+**Объяснение**:
+- Плейбук применяется к группе `monitoring`.
+- Коллекция `prometheus.prometheus` предоставляет модули для Prometheus и экспортеров.
+- Роли `prometheus` и `node_exporter` (из коллекции `prometheus.prometheus`) устанавливают Prometheus и Node Exporter.
+- Задача настраивает конфигурацию Prometheus для сбора метрик с Node Exporter (порт 9100) и PostgreSQL Exporter (порт 9187 на `backend`).
+- При изменении конфигурации вызывается хэндлер `Reload Prometheus`, определённый в коллекции, для перезагрузки сервиса.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## Компоненты инфраструктуры
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Инфраструктура включает:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. **Сети**:
+   - **VPC**: Изолирует серверы.
+   - **Подсети**: Публичные (NGINX, Grafana) и приватные (базы данных).
+   - **NAT**: Обеспечивает доступ в интернет.
+   - **Балансировщик нагрузки**: Для масштабирования в будущем.
 
-## License
-For open source projects, say how it is licensed.
+2. **Мониторинг и логирование**:
+   - **Prometheus**: Собирает метрики (включая контейнеры через cAdvisor).
+   - **Экспортеры**: Node Exporter (системные метрики: CPU, память, диск), PostgreSQL Exporter (метрики базы данных).
+   - **Grafana**: Визуализирует метрики и логи.
+   - **AlertManager**: Отправляет уведомления.
+   - **Alloy**: Собирает логи.
+   - **Loki**: Хранит логи.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Структура директорий
+
+Проект организован для понятности и масштабируемости:
+
+```
+/pretix-infra
+├── /terraform             # Конфигурации для создания инфраструктуры
+├── /ansible               # Конфигурации для настройки серверов
+│   ├── /playbooks         # Сценарии для настройки сервисов
+│   ├── /roles             # Инструкции для настройки сервисов
+│   ├── inventory.yml      # Список серверов
+│   ├── ansible.cfg        # Настройки Ansible
+│   └── requirements.yml   # Коллекции и роли из Ansible Galaxy
+├── /ci-cd                 # Автоматизация развертывания
+│   ├── .gitlab-ci.yml     # Пайплайн для GitLab
+│   └── /scripts           # Скрипты для CI/CD
+├──  README.md             # Этот файл, описание инфраструктуры как кода
+└── .gitignore             # Игнорируемые файлы
+```
+
+### Описание структуры директорий
+
+#### `/terraform`
+Содержит код для создания инфраструктуры в **Yandex Cloud** с помощью Terraform. Не рассматривается подробно, так как не является основной задачей.
+
+#### `/ansible`
+Содержит код для настройки сервисов на серверах с помощью Ansible.
+
+- **`/playbooks`**  
+  Сценарии для настройки сервисов на инстансах.  
+  - `all-install.yml`: Включает все плейбуки для полной настройки инфраструктуры.  
+  - `setup_nginx.yml`: Устанавливает NGINX на инстансе 1 (Frontend).  
+  - `setup_docker.yml`: Устанавливает Docker и запускает Pretix на инстансе 1.  
+  - `setup_postgres.yml`: Устанавливает PostgreSQL на инстансе 2 (Backend).  
+  - `setup_redis.yml`: Устанавливает Redis в Docker на инстансе 2.  
+  - `setup_monitoring.yml`: Настраивает Prometheus, Grafana, AlertManager, Node Exporter на инстансе 3.  
+  - `setup_logging.yml`: Настраивает Alloy и Loki на инстансе 1, 2, 3.
+
+- **`/roles`**  
+  Инструкции для настройки каждого сервиса, включая экспортеры. Каждая роль — набор шагов для установки и настройки, созданный с помощью `ansible-galaxy init`.  
+  - **Состав роли** (например, `nginx`, `node_exporter`):  
+    - **`defaults/main.yml`**: Переменные по умолчанию с низким приоритетом (например, параметры сервиса).  
+    - **`files/`**: Статичные файлы, копируемые на сервер (например, SSL-сертификаты).  
+    - **`handlers/main.yml`**: Хэндлеры для перезагрузки сервисов (например, перезапуск NGINX).  
+    - **`meta/main.yml`**: Метаданные роли (автор, зависимости, поддерживаемые платформы).  
+    - **`tasks/main.yml`**: Основные шаги для настройки сервиса (установка, конфигурация, запуск).  
+    - **`templates/`**: Шаблоны конфигураций (например, `nginx.conf.j2`).  
+    - **`tests/`**: Тесты для проверки роли.  
+    - **`vars/main.yml`**: Переменные, специфичные для роли (например, порт сервиса).  
+  - Роли: `nginx`, `docker`, `postgres`, `redis`, `grafana`, `loki`, `alloy`, `node_exporter`, `postgres_exporter`.  
+  - Роль `prometheus` берётся из коллекции `prometheus.prometheus`, а не создаётся локально. Её хэндлеры, такие как `Reload Prometheus`, находятся в каталоге коллекции (например, `~/.ansible/collections/ansible_collections/prometheus/prometheus/roles/prometheus/handlers`).
+
+- **`inventory.yml`**  
+  Список серверов (IP-адреса, группы) для Ansible.
+
+- **`ansible.cfg`**  
+  Настройки Ansible (например, путь к `inventory.yml` или SSH-пользователь).
+
+- **`requirements.yml`**  
+  Список коллекций и ролей из **Ansible Galaxy**. Пример:
+
+```
+---
+collections:
+  - name: community.general
+  - name: community.postgresql
+  - name: community.docker
+  - name: prometheus.prometheus
+```
+
+#### `/ci-cd`
+Содержит настройки для автоматизации развертывания через GitLab CI/CD.
+
+- **`.gitlab-ci.yml`**  
+  Пайплайн, запускающий Terraform и Ansible.
+
+- **`/scripts`**  
+  Скрипты для упрощения команд (например, `deploy_terraform.sh`, `run_ansible.sh`).
+
+#### `README.md`
+Общее описание проекта.
+
+#### `.gitignore`
+Игнорирует временные файлы и секреты (например, `.tfstate`, SSH-ключи).
+
+## Развертывание инфраструктуры
+
+Процесс настройки и развертывания включает подготовку, создание ресурсов, настройку серверов и автоматизацию через CI/CD.
+
+### 1. Подготовка
+
+- Установите инструменты:
+  - **Terraform**: Скачайте с [официального сайта](https://www.terraform.io/downloads.html).
+  - **Ansible**: Установите через `pip install ansible` или по [инструкции](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).
+- Получите API-токен для Yandex Cloud: [инструкция](https://cloud.yandex.com/docs/iam/operations/iam-token/create).
+- Создайте SSH-ключи для доступа к серверам.
+- Склонируйте репозиторий:
+```
+git clone <URL-репозитория>
+cd pretix-infra
+```
+
+### 2. Развертывание вычислительных ресурсов (Terraform)
+
+Terraform создаёт виртуальные машины и сети в Yandex Cloud.
+
+- Перейдите в папку продакшн:
+```
+cd terraform/environments/prod
+```
+- Инициализируйте Terraform:
+```
+terraform init
+```
+- Проверьте план:
+```
+terraform plan
+```
+- Создайте инфраструктуру:
+```
+terraform apply
+```
+
+### 3. Настройка серверов (Ansible)
+
+Ansible настраивает сервисы на инстансе, используя коллекции. Можно запустить все настройки одной командой через `all-install.yml` или выполнить плейбуки по отдельности.
+
+- Перейдите в папку Ansible:
+```
+cd ansible
+```
+- Установите коллекции и роли:
+```
+ansible-galaxy install -r requirements.yml
+```
+- Запустите все настройки одной командой:
+```
+ansible-playbook -i inventory.yml playbooks/all-install.yml
+```
+- Альтернативно, запустите плейбуки по отдельности:
+```
+ansible-playbook -i inventory.yml playbooks/setup_nginx.yml
+ansible-playbook -i inventory.yml playbooks/setup_docker.yml
+ansible-playbook -i inventory.yml playbooks/setup_postgres.yml
+ansible-playbook -i inventory.yml playbooks/setup_redis.yml
+ansible-playbook -i inventory.yml playbooks/setup_monitoring.yml
+ansible-playbook -i inventory.yml playbooks/setup_logging.yml
+```
+
+### 4. Настройка CI/CD
+
+- Загрузите код в GitLab.
+- Настройте секреты (API-токен Yandex Cloud, SSH-ключи) в **GitLab Settings -> CI/CD -> Variables**.
+- Пайплайн в `.gitlab-ci.yml` автоматически выполнит Terraform и Ansible.
+
