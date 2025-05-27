@@ -1,0 +1,22 @@
+---
+- name: Проверяем что докер установлен
+  command: docker info
+
+- name: "Убедимся что монтируемая директория создана"
+  file:
+    path: "{{ data_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Запускаем RabbitMQ в Docker
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image }}"
+    state: started
+    ports: "{{ ports }}"
+    env: "{{ env }}"
+    volumes:
+      - "{{ data_dir }}:/var/lib/rabbitmq"
+    restart_policy: "{{ restart_policy }}"
