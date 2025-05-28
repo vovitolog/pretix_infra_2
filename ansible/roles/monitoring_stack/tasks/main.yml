@@ -1,0 +1,58 @@
+---
+- name: Ensure required packages are installed
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Ensure Docker service is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Create directories for Prometheus, Alertmanager, and Grafana
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+  loop:
+    - { path: /opt/prometheus, mode: '0755' }
+    - { path: /opt/alertmanager, mode: '0755' }
+    - { path: /opt/grafana, mode: '0775', owner: '472', group: '472' }
+
+- name: Copy Prometheus configuration file
+  ansible.builtin.copy:
+    src: files/prometheus.yml
+    dest: /opt/prometheus/prometheus.yml
+    mode: '0644'
+
+- name: Copy Prometheus rules file
+  ansible.builtin.copy:
+    src: files/rules.yml
+    dest: /opt/prometheus/rules.yml
+    mode: '0644'
+
+- name: Copy Alertmanager configuration file
+  ansible.builtin.template:
+    src: files/alertmanager.yml.j2
+    dest: /opt/alertmanager/alertmanager.yml
+    mode: '0644'
+
+- name: Copy docker-compose configuration
+  ansible.builtin.template:
+    src: files/docker-compose.yml.j2
+    dest: /opt/docker-compose.yml
+    mode: '0644'
+
+- name: Ensure Docker Compose stack is up
+  ansible.builtin.command:
+    cmd: docker-compose -f /opt/docker-compose.yml up -d
+    chdir: /opt
+  changed_when: true
