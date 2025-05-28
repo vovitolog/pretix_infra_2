@@ -1,0 +1,11 @@
+groups:
+- name: example
+  rules:
+  - alert: GrafanaDown
+    expr: probe_success{job="blackbox"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Grafana is down"
+      description: "{{ $labels.instance }} is not responding to ping for 1 minutes."
