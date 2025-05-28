@@ -3,3 +3,5 @@ collections:
   - name: community.postgresql
   - name: community.docker
   - name: prometheus.prometheus
+  - name: community.rabbitmq
+    version: 1.4.0

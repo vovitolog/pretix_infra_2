@@ -1,38 +1,44 @@
-Role Name
+RabbitMQ
 =========
 
-A brief description of the role goes here.
+Данная роль предназначена для MVP установки RabbitMQ на хост
 
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+| Переменная             | Описание                                        |
+|------------------------|-------------------------------------------------|
+| `rabbitmq_admin`       | Логин администратора RabbitMQ                  |
+| `rabbitmq_admin_pass`  | Пароль администратора RabbitMQ                 |
+| `rabbitmq_keys`        | Список ключей для подписи репозитория          |
+| `rabbitmq_repos`       | Список репозиториев, которые нужно добавить    |
+| `rabbitmq_repo_filename` | Имя файла, в который сохраняются репозитории |
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Должна быть установлена коллекция
+```bash
+ansible-galaxy collection install community.rabbitmq
+```
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+Пример использования
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```yml
+---
+- name: Устанавливам rabbit
+  hosts: backend
+  become: true
+  vars_files:
+    - user.yml # Создайте файл рядом с Playbook и укажите новое значение переменных rabbitmq_admin и rabbitmq_admin_pass
+  collections:
+    - community.rabbit
+  roles:
+    - rabbitmq
+```
 
-License
--------
 
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).

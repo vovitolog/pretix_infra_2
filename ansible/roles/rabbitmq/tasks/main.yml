@@ -1,2 +1,67 @@
 ---
-# tasks file for rabbitmq
+
+- name: Устанавливаем необходимые пакеты
+  apt:
+    name: "{{ requirements }}"
+    state: present
+    update_cache: yes
+
+- name: Проверяем наличие /usr/share/keyrings
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Скачиваем ключи
+  shell: |
+    curl -1sLf "{{ item.url }}" | gpg --dearmor > "{{ item.dest }}"
+  args:
+    creates: "{{ item.dest }}"
+  loop: "{{ rabbitmq_keys }}"
+  loop_control:
+    label: "{{ item.dest | basename }}"
+
+- name: Добавялем репозитории
+  apt_repository:
+    filename: "{{ rabbitmq_repo_filename }}"
+    repo: "{{ item.repo }}"
+    state: present
+  loop: "{{ rabbitmq_repos }}"
+  loop_control:
+    label: "{{ item.repo }}"
+
+
+- name: Устанавливаем erlang
+  apt:
+    name: "{{ erlang_package }}"
+    state: present
+    update_cache: yes
+
+- name: Устанавливаем rabbitmq
+  apt:
+    name: "rabbitmq-server"
+    state: present
+
+- name: Включаем и запускаем сервис
+  service:
+    name: "rabbitmq-server"
+    enabled: yes
+    state: started
+
+- name: Включаем management плагин 
+  community.rabbitmq.rabbitmq_plugin:
+    name: rabbitmq_management
+    state: enabled
+
+- name: Создаем админа
+  community.rabbitmq.rabbitmq_user:
+    user: "{{ rabbitmq_admin }}"
+    password: "{{ rabbitmq_admin_pass }}"
+    login_user: "{{ rabbitmq_admin }}"
+    login_password: "{{ rabbitmq_admin_pass }}"
+    vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    tags: administrator
+    state: present
