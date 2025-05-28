@@ -28,7 +28,7 @@ None. This role is self-contained and does not depend on other Ansible roles.
 ```yaml
 - hosts: monitoring_servers
   roles:
-    - role: prometheus_stack
+    - role: monitoring_stack
       vars:
         grafana_admin_password: "PASSWORD"
         telegram_bot_token: "BOT_TOKEN"
