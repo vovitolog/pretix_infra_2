@@ -1,4 +1,4 @@
-# Prometheus Stack Role
+# Monitoring Stack Role
 
 This Ansible role deploys a monitoring stack consisting of Prometheus, Alertmanager, Grafana, and Blackbox Exporter using Docker Compose. It configures Prometheus to monitor with HTTP probing for Grafana availability. Alertmanager is set up to send notifications to Telegram, and a sample alert rule is included to detect Grafana downtime.
 
