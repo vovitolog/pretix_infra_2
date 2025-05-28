@@ -1,0 +1,37 @@
+---
+
+- name: Устанавливаем необходимые пакеты
+  apt:
+    name: "{{ requirements }}"
+    state: present
+    update_cache: yes
+
+- name: Устанавливаем дополнительный пакет для Debian
+  apt:
+    name: debian-archive-keyring
+    state: present
+  when: ansible_distribution | lower == "debian"
+
+- name: Проверяем наличие /usr/share/keyrings
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Скачиваем ключи
+  shell: curl -fsSL "{{ gitlab_keys.url }}" | gpg --dearmor > {{ gitlab_keys.dest }}
+
+- name: Добавляем репозиторий
+  apt_repository:
+    filename: "{{ gitlab_repo_filename }}"
+    repo: "{{ gitlab_repo }}"
+    state: present
+
+- name: Установка gitlab
+  environment:
+    GITLAB_ROOT_EMAIL: "{{ gitlab_root_email }}"
+    GITLAB_ROOT_PASSWORD: "{{ gitlab_root_password }}"
+    EXTERNAL_URL: "{{ external_url }}"
+  apt:
+    name: gitlab-ce
+    state: present
