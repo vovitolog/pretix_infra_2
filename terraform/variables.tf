@@ -33,3 +33,39 @@ variable "service_account_key_file" {
   description = "Path to the service account key file (JSON)"
   type        = string
 }
+
+# General VM parameters
+variable "vm_platform_id" {
+  type    = string
+  default = "standard-v3" 
+}
+
+variable "vm_zone" {
+  type    = string
+  default = "ru-central1-d"
+}
+
+variable "vm_disk_size" {
+  type    = number
+  default = 50
+}
+
+variable "vm_disk_type" {
+  type    = string
+  default = "network-ssd"
+}
+
+variable "vm_preemptible" {
+  type    = bool
+  default = true
+}
+
+variable "vm_core_fraction" {
+  type    = number
+  default = 50
+}
+
+variable "vm_os_family" {
+  type        = string
+  default     = "ubuntu-2404-lts"
+}
