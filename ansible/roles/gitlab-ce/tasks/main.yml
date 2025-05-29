@@ -1,37 +1,32 @@
 ---
 
 - name: Устанавливаем необходимые пакеты
-  apt:
+  ansible.builtin.apt:
     name: "{{ requirements }}"
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Устанавливаем дополнительный пакет для Debian
-  apt:
+  ansible.builtin.apt:
     name: debian-archive-keyring
     state: present
   when: ansible_distribution | lower == "debian"
 
-- name: Проверяем наличие /usr/share/keyrings
-  file:
-    path: /usr/share/keyrings
-    state: directory
-    mode: '0755'
-
-- name: Скачиваем ключи
-  shell: curl -fsSL "{{ gitlab_keys.url }}" | gpg --dearmor > {{ gitlab_keys.dest }}
-
 - name: Добавляем репозиторий
-  apt_repository:
-    filename: "{{ gitlab_repo_filename }}"
-    repo: "{{ gitlab_repo }}"
-    state: present
+  ansible.builtin.deb822_repository:
+    name: "{{ gitlab_repo_filename }}"
+    types: deb
+    uris: "https://packages.gitlab.com/gitlab/gitlab-ce/{{ ansible_distribution | lower }}"
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    signed_by: "{{ gitlab_keys.url }}"
 
 - name: Установка gitlab
   environment:
     GITLAB_ROOT_EMAIL: "{{ gitlab_root_email }}"
     GITLAB_ROOT_PASSWORD: "{{ gitlab_root_password }}"
     EXTERNAL_URL: "{{ external_url }}"
-  apt:
+  ansible.builtin.apt:
     name: gitlab-ce
     state: present
+    update_cache: true
