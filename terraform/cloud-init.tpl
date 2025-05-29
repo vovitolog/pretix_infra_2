@@ -21,3 +21,14 @@ users:
     ssh_authorized_keys:
       - ${key}
 %{ endfor }
+
+package_update: true
+package_upgrade: true
+packages:
+  - openssh-server
+  - vi
+  - python3
+  - curl
+runcmd:
+  - curl -fsL https://get.docker.com/ | sh
+

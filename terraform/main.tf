@@ -20,7 +20,7 @@ locals {
       platform       = var.vm_platform_id
       zone           = var.vm_zone
       cores          = 2
-      memory         = 8
+      memory         = 4
       core_fraction  = var.vm_core_fraction
       disk_size      = var.vm_disk_size
       disk_type      = var.vm_disk_type
