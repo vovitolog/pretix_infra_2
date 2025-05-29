@@ -1,0 +1,27 @@
+---
+
+- name: Проверяем что докер установлен
+  ansible.builtin.command: docker info
+  changed_when: false
+
+- name: Регистрируем GitLab Runner в Docker
+  community.docker.docker_container:
+    name: "{{ container_name }}-register"
+    image: "{{ image }}"
+    state: started
+    auto_remove: true
+    volumes:
+      - "runner_data:/etc/gitlab-runner"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: register --non-interactive  --url "{{ gitlab_url }}" --token "{{ gitlab_runner_token }}" --executor "docker" --docker-image "docker:stable"
+
+- name: Запускаем GitLab Runner в Docker
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image }}"
+    state: started
+    volumes:
+      - "runner_data:/etc/gitlab-runner"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: run --user root --working-directory /etc/gitlab-runner
+    restart_policy: "{{ restart_policy }}"

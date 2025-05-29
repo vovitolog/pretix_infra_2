@@ -1,0 +1,19 @@
+---
+
+gitlab_keys:
+  url: "https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey"
+  dest: /usr/share/keyrings/gitlab_gitlab-ce-archive-keyring.gpg
+
+gitlab_repo: "deb [signed-by={{ gitlab_keys.dest }}] https://packages.gitlab.com/gitlab/gitlab-ce/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main"
+
+gitlab_repo_filename: gitlab_gitlab-ce
+
+
+gitlab_root_password: strongpassword
+gitlab_root_email: gitlab_admin@example.com
+external_url: https://gitlab.example.com
+
+requirements:
+  - curl
+  - gnupg
+  - apt-transport-https
