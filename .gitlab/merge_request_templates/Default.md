@@ -1,1 +1,1 @@
-Closes homeworks/pretix-team2#ENTER_ISSUE_№
+Related to homeworks/pretix-team2#ENTER_ISSUE_№
