@@ -1,0 +1,1 @@
+Closes homeworks/Pretix-team2#ENTER_ISSUE_№
