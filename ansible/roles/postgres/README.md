@@ -1,38 +1,57 @@
-Role Name
-=========
+# Postgres Role
 
-A brief description of the role goes here.
+This Ansible role deploys PostgreSQL in a Docker container on the backend server. It configures a secure PostgreSQL instance with persistent storage, suitable for production use alongside other backend services (e.g., Redis, RabbitMQ).
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.9 or higher.
+- Debian (Ubuntu) -based system.
+- Ansible Vault for managing encrypted secrets.
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Variables are split into two files in `defaults/main/`:
+- `main.yml`: Non-sensitive variables (e.g., `postgres_version`, `postgres_port`).
+- `secrets.yml`: Sensitive variables (e.g., `postgres_password`), encrypted with Ansible Vault.
 
-Dependencies
-------------
+### Main Variables (`defaults/main/main.yml`)
+- `postgres_version`: PostgreSQL image tag (default: `17.5`).
+- `postgres_port`: Port to expose (default: `5432`).
+- `postgres_db`: Database name (default: `pretix`).
+- `postgres_user`: Database user (default: `pretix`).
+- `postgres_data_dir`: Data directory (default: `/opt/postgres/data`).
+- `postgres_container_name`: Container name (default: `postgres`).
+- `container_network`: Docker network (default: `backend`).
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+### Sensitive Variables (`defaults/main/secrets.yml`)
+- `postgres_password`: Password for the database user (encrypted, default: `*****`).
 
-Example Playbook
-----------------
+## Playbook
+Already configured playbook, which is in the directory with playbooks:
+```yml!
+# /ansible/playbooks/setup_postgresql.yml
+- hosts: backend
+  roles:
+    - role: postgres
+      vars:
+        # By default, all variables are set correctly and do not require changes. You can change them if necessary
+        # postgres_version: "17.5"                # PostgreSQL image tag
+        # postgres_port: "5532"                   # Default port: 5432
+        # postgres_data_dir: "/opt/postgres/data" # Persistent data directory
+        # postgres_container_name: "postgres"     # Default container name
+        # postgres_db: "pretix"                   # Default database name
+        # postgres_user: "pretix"                 # Default database user
+        # postgres_password: "*****"              # Default password for database user
+        # container_network: "backend"            # Default network for container
+```
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+## How to use
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+Playbook must be used from the directory `/ansible`
 
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+1. Run the command:
+```bash
+ansible-playbook playbooks/setup_postgres.yml --ask-vault-pass
+```
+2. Enter password for Ansible Vault
+3. Done!

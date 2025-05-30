@@ -1,2 +1,38 @@
 ---
-# tasks file for postgres
+- name: Ensure required packages are installed
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+    state: present
+  become: yes
+
+- name: Ensure Docker service is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Create directory for PostgreSQL data
+  ansible.builtin.file:
+    path: "{{ postgres_data_dir }}"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: yes
+
+- name: Copy docker-compose configuration
+  ansible.builtin.template:
+    src: templates/docker-compose.yml.j2
+    dest: "/opt/postgres/docker-compose.yml"
+    mode: '0644'
+  become: yes
+
+- name: Ensure Docker Compose stack is up
+  ansible.builtin.command:
+    cmd: docker-compose -f /opt/postgres/docker-compose.yml up -d
+    chdir: /opt/postgres
+  changed_when: true
+  become: yes
