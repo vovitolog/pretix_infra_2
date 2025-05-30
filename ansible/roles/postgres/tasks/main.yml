@@ -3,16 +3,30 @@
   ansible.builtin.apt:
     name:
       - docker.io
-      - docker-compose
     state: present
-  become: yes
+  become: true
 
 - name: Ensure Docker service is running
   ansible.builtin.service:
     name: docker
     state: started
-    enabled: yes
-  become: yes
+    enabled: true
+  become: true
+
+- name: Check if Docker network exists
+  ansible.builtin.command: docker network ls --format '{{ '{{' }}.Name{{ '}}' }}' | grep -w {{ container_network }}
+  register: network_check
+  changed_when: false
+  failed_when: false
+  become: true
+
+- name: Create Docker network if it does not exist
+  ansible.builtin.command: docker network create --driver bridge {{ container_network }}
+  when: network_check.stdout == ""
+  become: true
+  register: network_create
+  failed_when: false
+  changed_when: network_create.rc == 0
 
 - name: Create directory for PostgreSQL data
   ansible.builtin.file:
@@ -21,18 +35,28 @@
     mode: '0700'
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
-  become: yes
+  become: true
 
-- name: Copy docker-compose configuration
-  ansible.builtin.template:
-    src: templates/docker-compose.yml.j2
-    dest: "/opt/postgres/docker-compose.yml"
-    mode: '0644'
-  become: yes
+- name: Check if PostgreSQL container is running
+  ansible.builtin.command: docker ps -q -f name=^{{ postgres_container_name }}$
+  register: container_check
+  changed_when: false
+  failed_when: false
+  become: true
 
-- name: Ensure Docker Compose stack is up
-  ansible.builtin.command:
-    cmd: docker-compose -f /opt/postgres/docker-compose.yml up -d
-    chdir: /opt/postgres
-  changed_when: true
-  become: yes
+- name: Run PostgreSQL container
+  ansible.builtin.command: >
+    docker run -d
+    --name {{ postgres_container_name }}
+    -p {{ postgres_port }}:5432
+    -e POSTGRES_DB={{ postgres_db }}
+    -e POSTGRES_USER={{ postgres_user }}
+    -e POSTGRES_PASSWORD={{ postgres_password }}
+    -v {{ postgres_data_dir }}:/var/lib/postgresql/data
+    --network {{ container_network }}
+    --restart unless-stopped
+    postgres:{{ postgres_version }}
+  when: container_check.stdout == ""
+  become: true
+  register: container_run
+  changed_when: container_run.rc == 0

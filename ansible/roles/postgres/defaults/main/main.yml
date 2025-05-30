@@ -4,5 +4,5 @@ postgres_port: "5432"                   # Default port: 5432
 postgres_data_dir: "/opt/postgres/data" # Persistent data directory
 postgres_container_name: "postgres"     # Docker container name
 postgres_db: "pretix"                   # Default database name
-postgres_user: "pretix"               # Default database user
-container_network: "backend"
+postgres_user: "pretix"                 # Default database user
+container_network: "pretix-network"     # Default docker network

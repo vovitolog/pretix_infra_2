@@ -42,7 +42,7 @@ Already configured playbook, which is in the directory with playbooks:
         # postgres_db: "pretix"                   # Default database name
         # postgres_user: "pretix"                 # Default database user
         # postgres_password: "*****"              # Default password for database user
-        # container_network: "backend"            # Default network for container
+        # container_network: "pretix-infra"       # Default network for container
 ```
 
 ## How to use
