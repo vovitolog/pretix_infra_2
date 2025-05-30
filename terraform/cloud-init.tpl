@@ -5,9 +5,15 @@ datasource:
 
 ssh_pwauth: false
 
+groups:
+  - docker
+
 users:
   - name: kholopovdi
-    groups: sudo
+    groups: 
+    - sudo
+    - docker
+    lock_passwd: true
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_authorized_keys:
@@ -15,7 +21,10 @@ users:
 
 %{ for user, key in users ~}
   - name: ${user}
-    groups: sudo
+    groups:
+    - sudo
+    - docker
+    lock_passwd: true
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_authorized_keys:
