@@ -1,4 +1,5 @@
 - hosts: monitoring
+  become: true
   roles:
     - role: monitoring_stack
       vars:
