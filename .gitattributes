@@ -1,0 +1,2 @@
+# Protect all files named secret.yml anywhere in the repository
+**/secret.yml binary
