@@ -1,20 +1,34 @@
 ---
-- name: Проверяем что докер установлен
-  command: docker info
 
-- name: "Убедимся что монтируемая директория создана"
-  file:
+- name: "Check that Docker API is available"
+  community.docker.docker_host_info:
+  register: docker_info
+  failed_when: docker_info is failed
+  changed_when: false
+
+- name: "Create RabbitMQ data directory"
+  ansible.builtin.file:
     path: "{{ data_dir }}"
     state: directory
-    owner: root
-    group: root
     mode: '0755'
 
-- name: Запускаем RabbitMQ в Docker
+- name: "Pull (or update) RabbitMQ image"
+  community.docker.docker_image:
+    name: "{{ image }}"
+    source: pull
+
+- name: "Ensure Docker network pretix-network exists"
+  community.docker.docker_network:
+    name: "{{ network_name }}"
+    state: present
+
+- name: "Run RabbitMQ container"
   community.docker.docker_container:
     name: "{{ container_name }}"
     image: "{{ image }}"
     state: started
+    networks:
+      - name: "{{ network_name }}"
     ports: "{{ ports }}"
     env: "{{ env }}"
     volumes:

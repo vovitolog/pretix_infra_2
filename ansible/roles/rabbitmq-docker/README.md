@@ -41,8 +41,6 @@ Example Playbook
 - name: Устанавливам rabbit в Docker
   hosts: backend
   become: true
-  vars_files:
-    - user-docker.yml # Создайте этот файл рядом с playbook и определите переменные окружения 
   collections:
     - community.docker
   roles:
