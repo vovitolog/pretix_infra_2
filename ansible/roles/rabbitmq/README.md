@@ -57,7 +57,7 @@ Playbook must be executed from the `/ansible` directory.
 1. Run the command:
 
 ```bash
-ansible-playbook playbooks/setup_rabbitmq.yml --ask-vault-pass
+ansible-playbook playbooks/setup_rabbitmq.yml -J
 ```
 
 2. Enter the password for Ansible Vault when prompted.
