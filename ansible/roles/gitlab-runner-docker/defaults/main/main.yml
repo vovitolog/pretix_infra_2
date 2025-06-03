@@ -2,6 +2,5 @@
 
 container_name: gitlab-runner
 image: gitlab/gitlab-runner:latest
-gitlab_url: https://gitlab.example.com
-gitlab_runner_token: your_token_gitlab_runner
+gitlab_url: https://gitlab.pretix.devops-factory.com
 restart_policy: unless-stopped

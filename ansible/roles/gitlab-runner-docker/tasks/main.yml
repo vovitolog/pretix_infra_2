@@ -1,10 +1,12 @@
 ---
 
-- name: Проверяем что докер установлен
-  ansible.builtin.command: docker info
+- name: "Check that Docker API is available"
+  community.docker.docker_host_info:
+  register: docker_info
+  failed_when: docker_info is failed
   changed_when: false
 
-- name: Регистрируем GitLab Runner в Docker
+- name: Registering GitLab Runner in Docker
   community.docker.docker_container:
     name: "{{ container_name }}-register"
     image: "{{ image }}"
@@ -15,7 +17,7 @@
       - "/var/run/docker.sock:/var/run/docker.sock"
     command: register --non-interactive  --url "{{ gitlab_url }}" --token "{{ gitlab_runner_token }}" --executor "docker" --docker-image "docker:stable"
 
-- name: Запускаем GitLab Runner в Docker
+- name: Launching GitLab Runner in Docker
   community.docker.docker_container:
     name: "{{ container_name }}"
     image: "{{ image }}"
