@@ -1,59 +1,61 @@
 ---
 
-- name: Устанавливаем необходимые пакеты
-  apt:
+- name: Install prerequisite packages
+  ansible.builtin.apt:
     name: "{{ requirements }}"
     state: present
-    update_cache: yes
+    update_cache: true
 
-- name: Проверяем наличие /usr/share/keyrings
-  file:
+- name: Ensure /usr/share/keyrings directory
+  ansible.builtin.file:
     path: /usr/share/keyrings
     state: directory
     mode: '0755'
 
-- name: Скачиваем ключи
-  shell: |
+- name: Add Team RabbitMQ's main signing key
+  ansible.builtin.shell: |
     curl -1sLf "{{ item.url }}" | gpg --dearmor > "{{ item.dest }}"
   args:
     creates: "{{ item.dest }}"
-  loop: "{{ rabbitmq_keys }}"
+  loop: "{{ rabbitmq_signing_key }}"
   loop_control:
     label: "{{ item.dest | basename }}"
 
-- name: Добавялем репозитории
-  apt_repository:
-    filename: "{{ rabbitmq_repo_filename }}"
-    repo: "{{ item.repo }}"
-    state: present
+
+- name: Add RabbitMQ repositories
+  ansible.builtin.deb822_repository:
+    name: "{{ item.name }}"
+    types: deb
+    uris: "{{ item.uris }}"
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    signed_by: "{{ item.signed_by }}"
   loop: "{{ rabbitmq_repos }}"
-  loop_control:
-    label: "{{ item.repo }}"
 
 
-- name: Устанавливаем erlang
-  apt:
+- name: Install Erlang
+  ansible.builtin.apt:
     name: "{{ erlang_package }}"
     state: present
-    update_cache: yes
+    update_cache: true
 
-- name: Устанавливаем rabbitmq
-  apt:
+- name: Install RabbitMQ
+  ansible.builtin.apt:
     name: "rabbitmq-server"
     state: present
 
-- name: Включаем и запускаем сервис
-  service:
+- name: Enable and start RabbitMQ service
+  ansible.builtin.service:
     name: "rabbitmq-server"
-    enabled: yes
+    enabled: true
     state: started
 
-- name: Включаем management плагин 
+- name: Enable management plugin
   community.rabbitmq.rabbitmq_plugin:
     name: rabbitmq_management
     state: enabled
 
-- name: Создаем админа
+- name: Create admin user
   community.rabbitmq.rabbitmq_user:
     user: "{{ rabbitmq_admin }}"
     password: "{{ rabbitmq_admin_pass }}"
