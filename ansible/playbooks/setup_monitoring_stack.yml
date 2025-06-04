@@ -1,4 +1,10 @@
 - hosts: monitoring
-  become: yes
+  become: true
   roles:
-    - monitoring_stack
+    - role: monitoring_stack
+      vars:
+      #  By default, all variables are set correctly and do not require changes. You can change them if necessary
+      #  grafana_admin_password: "*****"  # Password for Grafana admin user
+      #  telegram_bot_token: "*****"      # Telegram bot token for Alertmanager notifications
+      #  telegram_chat_id: "-393421237"   # Telegram chat ID for notifications
+      #  grafana_host: "grafana:3000"     # Host and port for Grafana probing

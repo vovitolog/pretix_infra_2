@@ -14,9 +14,9 @@ This Ansible role deploys a monitoring stack consisting of Prometheus, Alertmana
 
 Variables are defined in `defaults/main.yml`:
 
-- `grafana_admin_password`: Password for Grafana admin user (default: `admin123`). **Change to a secure password in production.**
-- `telegram_bot_token`: Telegram bot token for Alertmanager notifications (default: `your_bot_token_here`). Obtain from @BotFather.
-- `telegram_chat_id`: Telegram chat ID for notifications (default: `0`). Must be a number, not a string. Obtain from @GetIDsBot.
+- `grafana_admin_password`: Password for Grafana admin user (default: `*****`). **Change to a secure password in production.**
+- `telegram_bot_token`: Telegram bot token for Alertmanager notifications (default: `*****`). Obtain from @BotFather.
+- `alerts_send_telegram_chat_id`: Telegram chat ID for notifications (default: `-393421237`). Must be a number, not a string. Obtain from @GetIDsBot.
 - `grafana_host`: Host and port for Grafana probing (default: `grafana:3000`). Used by Blackbox Exporter for HTTP checks.
 
 ## Dependencies
@@ -30,10 +30,11 @@ None. This role is self-contained and does not depend on other Ansible roles.
   roles:
     - role: monitoring_stack
       vars:
-        grafana_admin_password: "PASSWORD"
-        telegram_bot_token: "BOT_TOKEN"
-        telegram_chat_id: "CHAT_ID"
-        grafana_host: "grafana:3000"
+      #  By default, all variables are set correctly and do not require changes. You can change them if necessary
+      #  grafana_admin_password: "*****"  # Password for Grafana admin user
+      #  telegram_bot_token: "*****"      # Telegram bot token for Alertmanager notifications
+      #  telegram_chat_id: "-393421237"   # Telegram chat ID for notifications
+      #  grafana_host: "grafana:3000"     # Host and port for Grafana probing
 ```
 Variables can also be changed in the file: `roles/monitoring_stack/defaults/main`:
 
