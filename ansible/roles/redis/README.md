@@ -1,38 +1,74 @@
-Role Name
-=========
+# Redis Docker Role
 
-A brief description of the role goes here.
+This Ansible role deploys Redis inside a Docker container. It pulls the Redis image, creates necessary volumes, configures ports, and runs the container with persistent storage and network settings.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+* Ansible 2.15.0 or higher.
+* Docker must be pre-installed on the target host.
+* `community.docker` Ansible collection.
 
-Role Variables
---------------
+Install the required collection with:
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+```bash
+ansible-galaxy collection install community.docker
+```
 
-Dependencies
-------------
+## Role Variables
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Variables are defined in `defaults/main.yml`:
 
-Example Playbook
-----------------
+### Main Variables (`defaults/main.yml`)
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+* `image`: Docker image name (default: `redis:8.0.1-alpine`).
+* `container_name`: Name of the Redis container (default: `pretix-redis`).
+* `ports`: List of ports to expose (default: `127.0.0.1:6379:6379`).
+* `volumes`: Docker volume name for Redis data persistence (default: `redis_data`).
+* `restart_policy`: Docker container restart policy (default: `always`).
+* `network_name`: Docker network name to attach the container to (default: `pretix-network`).
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Playbook
 
-License
--------
+Example playbook to set up Redis in Docker:
 
-BSD
+```yaml
+# /ansible/playbooks/setup_redis.yml
+- hosts: mvp
+  become: true
+  collections:
+    - community.docker
+  roles:
+    - role: redis
+      vars:
+        # By default, variables are correctly set and usually do not require changes.
+        # You can override them if necessary:
+        # image: "redis:8.0.1-alpine"
+        # container_name: "pretix-redis"
+        # ports:
+        #   - "127.0.0.1:6379:6379"
+        # volumes: "redis_data"
+        # restart_policy: "always"
+        # network_name: "pretix-network"
+```
 
-Author Information
-------------------
+## How to Use
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Playbook must be executed from the `/ansible` directory.
+
+1. Run the command:
+
+```bash
+ansible-playbook playbooks/setup_redis.yml
+```
+
+2. Redis will be deployed inside a Docker container and ready to use!
+
+## What This Role Does
+
+The role performs the following actions:
+
+1. Verifies Docker API is available on the target host.
+2. Creates a Docker volume for Redis data persistence.
+3. Pulls (or updates) the specified Redis Docker image.
+4. Ensures the specified Docker network exists.
+5. Runs the Redis container with specified configurations (ports, volume, restart policy, network).

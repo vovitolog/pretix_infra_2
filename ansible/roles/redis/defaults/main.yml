@@ -1,2 +1,14 @@
 ---
-# defaults file for redis
+
+image: "redis:8.0.1-alpine"
+
+container_name: "pretix-redis"
+
+ports:
+  - "127.0.0.1:6379:6379"
+
+volumes: "redis_data"
+
+restart_policy: "always"
+
+network_name: "pretix-network"
