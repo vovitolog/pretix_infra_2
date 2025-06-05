@@ -1,2 +1,34 @@
 ---
-# tasks file for redis
+
+- name: "Check that Docker API is available"
+  community.docker.docker_host_info:
+  register: docker_info
+  failed_when: docker_info is failed
+  changed_when: false
+
+- name: Create a volume
+  community.docker.docker_volume:
+    name: "{{ volumes }}"
+    state: present
+
+- name: "Pull (or update) Redis image"
+  community.docker.docker_image:
+    name: "{{ image }}"
+    source: pull
+
+- name: "Ensure Docker network pretix-network exists"
+  community.docker.docker_network:
+    name: "{{ network_name }}"
+    state: present
+
+- name: "Run Redis container"
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image }}"
+    state: started
+    networks:
+      - name: "{{ network_name }}"
+    ports: "{{ ports }}"
+    volumes:
+      - "{{ volumes }}:/data"
+    restart_policy: "{{ restart_policy }}"
