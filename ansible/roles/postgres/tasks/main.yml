@@ -1,8 +1,6 @@
----
 - name: Ensure required packages are installed
   ansible.builtin.apt:
-    name:
-      - docker.io
+    name: docker-compose
     state: present
   become: true
 
@@ -13,50 +11,80 @@
     enabled: true
   become: true
 
-- name: Check if Docker network exists
-  ansible.builtin.command: docker network ls --format '{{ '{{' }}.Name{{ '}}' }}' | grep -w {{ container_network }}
-  register: network_check
-  changed_when: false
-  failed_when: false
+- name: Log in to GitLab Docker registry
+  community.docker.docker_login:
+    registry_url: "gitlab.pretix.devops-factory.com:5050"
+    username: "{{ docker_registry_token_name }}"
+    password: "{{ docker_registry_token }}"
   become: true
+  no_log: true
 
-- name: Create Docker network if it does not exist
-  ansible.builtin.command: docker network create --driver bridge {{ container_network }}
-  when: network_check.stdout == ""
+- name: Create Docker network
+  community.docker.docker_network:
+    name: "{{ container_network }}"
+    driver: bridge
+    state: present
   become: true
-  register: network_create
-  failed_when: false
-  changed_when: network_create.rc == 0
 
 - name: Create directory for PostgreSQL data
   ansible.builtin.file:
     path: "{{ postgres_data_dir }}"
     state: directory
     mode: '0700'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-  become: true
-
-- name: Check if PostgreSQL container is running
-  ansible.builtin.command: docker ps -q -f name=^{{ postgres_container_name }}$
-  register: container_check
-  changed_when: false
-  failed_when: false
+    owner: "70"
+    group: "root"
   become: true
 
 - name: Run PostgreSQL container
-  ansible.builtin.command: >
-    docker run -d
-    --name {{ postgres_container_name }}
-    -p {{ postgres_port }}:5432
-    -e POSTGRES_DB={{ postgres_db }}
-    -e POSTGRES_USER={{ postgres_user }}
-    -e POSTGRES_PASSWORD={{ postgres_password }}
-    -v {{ postgres_data_dir }}:/var/lib/postgresql/data
-    --network {{ container_network }}
-    --restart unless-stopped
-    postgres:{{ postgres_version }}
-  when: container_check.stdout == ""
+  community.docker.docker_container:
+    name: "{{ postgres_container_name }}"
+    image: "gitlab.pretix.devops-factory.com:5050/pretix/pretix-ci-cd/postgres:{{ postgres_version }}"
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "{{ postgres_ip_port }}:5432"
+    env:
+      POSTGRES_DB: "{{ postgres_db }}"
+      POSTGRES_USER: "{{ postgres_user }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
+    volumes:
+      - "{{ postgres_data_dir }}:/var/lib/postgresql/data"
+    networks:
+      - name: "{{ container_network }}"
   become: true
   register: container_run
-  changed_when: container_run.rc == 0
+
+- name: Wait for PostgreSQL container to be running
+  community.docker.docker_container_info:
+    name: "{{ postgres_container_name }}"
+  register: container_info
+  until: container_info.exists and container_info.container.State.Running
+  retries: 6
+  delay: 5
+  become: true
+  when: container_run.changed
+
+- name: Check if pg_hba.conf contains the required entry
+  community.docker.docker_container_exec:
+    container: "{{ postgres_container_name }}"
+    command: grep -Fx "host pretix pretix 172.17.0.1/16 md5" /var/lib/postgresql/data/pg_hba.conf
+  register: pg_hba_check
+  changed_when: false
+  failed_when: false  # Ignore error, when string not found
+  become: true
+
+- name: Add entry to pg_hba.conf if not present
+  community.docker.docker_container_exec:
+    container: "{{ postgres_container_name }}"
+    command: sh -c 'echo "host pretix pretix 172.17.0.1/16 md5" >> /var/lib/postgresql/data/pg_hba.conf'
+  when: pg_hba_check.rc != 0  # Add string, when grep not found string
+  register: pg_hba_update
+  become: true
+
+- name: Restart PostgreSQL container to apply pg_hba.conf changes
+  community.docker.docker_container:
+    name: "{{ postgres_container_name }}"
+    state: started
+    restart: true
+  when: pg_hba_update is defined and pg_hba_update.changed
+  become: true
