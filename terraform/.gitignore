@@ -1,0 +1,8 @@
+sensitive.auto.tfvars
+terraform.tfstate*
+*.txt
+.terraform/*
+.terraform*
+authorized_key.json
+provider.auto.tfvars
+personal.auto.tfvars
