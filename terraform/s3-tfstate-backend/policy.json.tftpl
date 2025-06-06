@@ -1,0 +1,78 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AccessToTheBucketButNotItsContent",
+      "Effect": "Allow",
+      "Principal": {
+        "CanonicalUser": ["${bucket_admin}"]
+      },
+      "Action": [
+        "s3:GetBucketAcl",
+        "s3:PutBucketAcl",
+        "s3:GetBucketLogging",
+        "s3:PutBucketLogging",
+        "s3:GetLifecycleConfiguration",
+        "s3:PutLifecycleConfiguration",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration",
+        "s3:GetBucketCORS",
+        "s3:PutBucketCORS",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${bucket_name}"
+      ]
+    },
+    {
+      "Sid": "YandexEssentialPermissions",
+      "Effect": "Allow",
+      "Principal": {
+        "CanonicalUser": [
+          %{~ for user in bucket_users ~}
+          "${user}",
+          %{~ endfor ~}
+          "${bucket_admin}"
+        ]
+      },
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketCORS",
+        "s3:GetBucketWebsite",
+        "s3:GetEncryptionConfiguration"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${bucket_name}"
+      ]
+    },
+    {
+      "Sid": "UserItemAccess",
+      "Effect": "Allow",
+      "Principal": {
+        "CanonicalUser": [
+          %{~ for user in bucket_users ~}
+          "${user}"%{ if user != bucket_users[length(bucket_users) - 1] },%{ endif }
+          %{~ endfor ~}
+        ]
+      },
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:PutObject",
+        "s3:GetObjectAcl",
+        "s3:GetObjectVersionAcl",
+        "s3:PutObjectAcl",
+        "s3:PutObjectVersionAcl",
+        "s3:ListMultipartUploadParts",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        %{~ for env in envs ~}
+        "arn:aws:s3:::${bucket_name}/state/${env}.tfstate"%{ if env != envs[length(envs) - 1] },%{ endif }
+        %{~ endfor ~}
+      ]
+    }
+  ]
+}
