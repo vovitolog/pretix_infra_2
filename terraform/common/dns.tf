@@ -48,3 +48,11 @@ resource "yandex_dns_recordset" "zone_soa" {
   data    = ["ns1.yandexcloud.net. mx.cloud.yandex.net. 1 10800 900 604800 900"]
 }
 
+resource "yandex_dns_recordset" "dev_singleton" {
+  count   = local.dev.dev_singleton_ip == null ? 0 : 1
+  zone_id = yandex_dns_zone.pretix.id
+  name    = "dev.pretix.devops-factory.com."
+  type    = "A"
+  ttl     = 180
+  data    = [local.dev.dev_singleton_ip]
+}
