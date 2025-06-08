@@ -9,7 +9,7 @@
 **Pretix** — веб-приложение для управления продажей билетов. Мы разворачиваем инфраструктуру в **Yandex Cloud** с использованием следующих инструментов:
 
 - **Terraform**: Создаёт серверы и сети (не в фокусе этой задачи).
-- **Ansible**: Устанавливает и настраивает сервисы (NGINX, PostgreSQL, Prometheus и др.).
+- **Ansible**: Устанавливает и настраивает сервисы (NGINX, PostgreSQL, Prometheus и др.) с использованием коллекций.
 - **GitLab**: Хранит код и автоматизирует развертывание (CI/CD).
 - **Yandex Cloud**: Облачная платформа для серверов.
 - **Мониторинг**: 
@@ -36,7 +36,7 @@
     - Node Exporter: Собирает системные метрики для Prometheus.
   Сеть: Публичный IP для доступа пользователей к Pretix.
   Terraform: Создаёт инстанс с публичным IP и доступом к интернету.
-  Ansible: Устанавливает NGINX, Docker, Alloy, Node Exporter; загружает образ Pretix, настраивает конфигурацию NGINX.
+  Ansible: Устанавливает NGINX, Docker, Alloy, Node Exporter с использованием коллекций; загружает образ Pretix, настраивает конфигурацию NGINX.
 ```
 
 ```
@@ -49,7 +49,7 @@
     - PostgreSQL Exporter: Собирает метрики базы данных для Prometheus.
   Сеть: Приватная подсеть для безопасности (без публичного IP).
   Terraform: Создаёт инстанс в приватной подсети.
-  Ansible: Устанавливает PostgreSQL, Redis, Alloy, Node Exporter, PostgreSQL Exporter; настраивает базы и подключения.
+  Ansible: Устанавливает PostgreSQL, Redis, Alloy, Node Exporter, PostgreSQL Exporter с использованием коллекций; настраивает базы и подключения.
 ```
 
 ```
@@ -63,15 +63,15 @@
     - Node Exporter: Собирает системные метрики для Prometheus.
   Сеть: Публичный IP для доступа к Grafana через браузер (или VPN для внутренней сети).
   Terraform: Создаёт инстанс с публичным IP или в приватной подсети.
-  Ansible: Устанавливает Prometheus, Grafana, AlertManager, Loki, Alloy, Node Exporter; настраивает дашборды и алерты.
+  Ansible: Устанавливает Prometheus, Grafana, AlertManager, Loki, Alloy, Node Exporter с использованием коллекций; настраивает дашборды и алерты.
 ```
 
-## Текущие плейбуки Ansible проекта Pretix
+## Примеры плейбуков Ansible
 
-Ниже приведены актуальные плейбуки Ansible, использующие модульный подход для настройки серверов в проекте Pretix, включая общий плейбук для выполнения всех настроек.
+Ниже приведены примеры плейбуков Ansible, использующих модульный подход с коллекциями для настройки серверов в проекте Pretix, включая общий плейбук для выполнения всех настроек.
 
-### Playbook: `all-install.yml` *(В РАЗРАБОТКЕ)*
-Этот плейбук включает все остальные плейбуки для последовательной настройки всех сервисов на инстансах.
+### Плейбук: all-install.yml
+Этот плейбук включает все остальные плейбуки для последовательной настройки всех сервисов на инстансе.
 
 ```
 ---
@@ -79,45 +79,71 @@
   hosts: all
   become: yes
   tasks:
+    - name: Include NGINX setup playbook
+      ansible.builtin.include: setup_nginx.yml
+
+    - name: Include Docker setup playbook
+      ansible.builtin.include: setup_docker.yml
+
     - name: Include PostgreSQL setup playbook
       ansible.builtin.include: setup_postgres.yml
+
+    - name: Include Redis setup playbook
+      ansible.builtin.include: setup_redis.yml
+
+    - name: Include monitoring setup playbook
+      ansible.builtin.include: setup_monitoring.yml
+
+    - name: Include logging setup playbook
+      ansible.builtin.include: setup_logging.yml
 ```
 
 **Объяснение**:
 - Плейбук применяется к группе `all`, так как каждый включённый плейбук таргетирует свою группу хостов (`frontend`, `backend`, `monitoring`).
-- Директива `ansible.builtin.include` вызывает указанные плейбуки в логическом порядке: сначала фронтенд (NGINX, pretix), затем бэкенд (PostgreSQL, Redis), затем мониторинг и логирование.
+- Директива `ansible.builtin.include` вызывает указанные плейбуки в логическом порядке: сначала фронтенд (NGINX, Docker), затем бэкенд (PostgreSQL, Redis), затем мониторинг и логирование.
 - Используется `become: yes` для выполнения задач с правами root.
 - Позволяет выполнить все настройки одной командой, сохраняя модульность.
 
-### Playbook: `setup_postgres.yml`
-Этот плейбук настраивает PostgreSQL на инстансе 2 (Backend).
+### Плейбук: setup_postgres.yml
+Это пример плейбука, который настраивает PostgreSQL на инстансе 2 (Backend), используя коллекцию `community.postgresql`.
 
-```yml!
-# >>> /ansible/playbooks/setup_postgresql.yml
-
-- hosts: backend
+```
+---
+- name: Configure PostgreSQL on Backend VM
+  hosts: backend
+  become: yes
+  collections:
+    - community.postgresql
   roles:
-    - role: postgres
-      vars:
-        # By default, all variables are set correctly and do not require changes. You can change them if necessary
-        # postgres_version: "17.5"                # PostgreSQL image tag
-        # postgres_port: "5532"                   # Default port: 5432
-        # postgres_data_dir: "/opt/postgres/data" # Persistent data directory
-        # postgres_container_name: "postgres"     # Default container name
-        # postgres_db: "pretix"                   # Default database name
-        # postgres_user: "pretix"                 # Default database user
-        # postgres_password: "*****"              # Default password for database user
-        # container_network: "backend"            # Default network for container
+    - postgres
+
+  tasks:
+    - name: Create Pretix database
+      postgresql_db:
+        name: pretix
+        state: present
+      become_user: postgres
+
+    - name: Create Pretix user
+      postgresql_user:
+        name: pretix_user
+        password: "{{ pretix_db_password }}"
+        db: pretix
+        priv: ALL
+        state: present
+      become_user: postgres
 ```
 
 **Объяснение**:
 - Плейбук применяется к группе `backend`.
+- Коллекция `community.postgresql` предоставляет модули для управления PostgreSQL.
 - Роль `postgres` (из `/roles/postgres`) устанавливает PostgreSQL и настраивает доступ.
-- Задачи создают базу `pretix` и пользователя `pretix`.
-- Пароль хранится в переменной по умолчанию `postgres_password` (зашифрованный с помощью **ansible-vault**).
+- Задачи создают базу `pretix` и пользователя `pretix_user` с правами.
+- Пароль хранится в переменной `pretix_db_password` (в vault или `vars`).
+- PostgreSQL Exporter настраивается отдельной ролью `postgres_exporter`.
 
-### Playbook: `setup_monitoring_stack.yml`
-Этот плейбук настраивает **Prometheus + AlertManager + Grafana** на инстансе 3 (Monitoring & Logging).
+### Плейбук: setup_monitoring.yml
+Это пример плейбука, который настраивает Prometheus и Node Exporter на инстансе 3 (Monitoring & Logging), используя коллекцию `prometheus.prometheus`.
 
 ```
 ---
@@ -146,8 +172,10 @@
 
 **Объяснение**:
 - Плейбук применяется к группе `monitoring`.
-- Роль `monitoring_stack` устанавливает **Prometheus** + **AlertManager** + **Grafana**.
-- Плейбук сразу сконфигурирован на связь **Prometheus** с **AlertManager** и настроен один алерт на доступность контейнера **Grafana** с роутом в телеграмм-канал.
+- Коллекция `prometheus.prometheus` предоставляет модули для Prometheus и экспортеров.
+- Роли `prometheus` и `node_exporter` (из коллекции `prometheus.prometheus`) устанавливают Prometheus и Node Exporter.
+- Задача настраивает конфигурацию Prometheus для сбора метрик с Node Exporter (порт 9100) и PostgreSQL Exporter (порт 9187 на `backend`).
+- При изменении конфигурации вызывается хэндлер `Reload Prometheus`, определённый в коллекции, для перезагрузки сервиса.
 
 ## Компоненты инфраструктуры
 
@@ -161,7 +189,7 @@
 
 2. **Мониторинг и логирование**:
    - **Prometheus**: Собирает метрики (включая контейнеры через cAdvisor).
-   - **Экспортеры**: Node Exporter (системные метрики: CPU, память, диск), PostgreSQL Exporter (метрики базы данных) и другие экспортеры.
+   - **Экспортеры**: Node Exporter (системные метрики: CPU, память, диск), PostgreSQL Exporter (метрики базы данных).
    - **Grafana**: Визуализирует метрики и логи.
    - **AlertManager**: Отправляет уведомления.
    - **Alloy**: Собирает логи.
@@ -169,16 +197,18 @@
 
 ## Структура директорий
 
+Проект организован для понятности и масштабируемости:
+
 ```
 pretix-infra/
-├── /terraform                    # Конфигурации для создания инфраструктуры с помощью Terraform
-│   ├── cloud-init.tpl            # Шаблон для автоматической настройки ВМ через cloud-init
-│   ├── main.tf                   # Основные ресурсы: ВМ, сети, хранилища и т.д.
-│   ├── outputs.tf                # Выходные переменные: IP, URL, ID и прочее
-│   ├── provider.tf               # Настройка провайдера
-│   ├── variables.tf              # Объявление входных переменных
-│   ├── terraform.tfvars          # Значения переменных для разворачивания инфраструктуры
-│   ├── terraform.tfstate         # Состояние инфраструктуры (генерируется автоматически)
+├── /terraform             # Конфигурации для создания инфраструктуры с помощью Terraform
+│   ├── cloud-init.tpl     # Шаблон для автоматической настройки ВМ через cloud-init
+│   ├── main.tf            # Основные ресурсы: ВМ, сети, хранилища и т.д.
+│   ├── outputs.tf         # Выходные переменные: IP, URL, ID и прочее
+│   ├── provider.tf        # Настройка провайдера
+│   ├── variables.tf       # Объявление входных переменных
+│   ├── terraform.tfvars   # Значения переменных для разворачивания инфраструктуры
+│   ├── terraform.tfstate  # Состояние инфраструктуры (генерируется автоматически)
 │   └── terraform.tfstate.backup  # Резервная копия состояния
 │
 ├── /ansible               # Конфигурации для настройки серверов через Ansible
@@ -216,9 +246,8 @@ pretix-infra/
 
 - **`/roles`**  
   Инструкции для настройки каждого сервиса, включая экспортеры. Каждая роль — набор шагов для установки и настройки, созданный с помощью `ansible-galaxy init`.  
-  - **Состав роли** (например, `postgres`, `monitoring_stack`):  
-    - **`defaults/main/main.yml`**: Переменные по умолчанию с низким приоритетом (например, параметры сервиса).  
-    - **`defaults/main/secret.yml`**: Шифрованные переменные по умолчанию с низким приоритетом (например, пароли и токены).  
+  - **Состав роли** (например, `nginx`, `node_exporter`):  
+    - **`defaults/main.yml`**: Переменные по умолчанию с низким приоритетом (например, параметры сервиса).  
     - **`files/`**: Статичные файлы, копируемые на сервер (например, SSL-сертификаты).  
     - **`handlers/main.yml`**: Хэндлеры для перезагрузки сервисов (например, перезапуск NGINX).  
     - **`meta/main.yml`**: Метаданные роли (автор, зависимости, поддерживаемые платформы).  
@@ -227,6 +256,7 @@ pretix-infra/
     - **`tests/`**: Тесты для проверки роли.  
     - **`vars/main.yml`**: Переменные, специфичные для роли (например, порт сервиса).  
   - Роли: `nginx`, `docker`, `postgres`, `redis`, `grafana`, `loki`, `alloy`, `node_exporter`, `postgres_exporter`.  
+  - Роль `prometheus` берётся из коллекции `prometheus.prometheus`, а не создаётся локально. Её хэндлеры, такие как `Reload Prometheus`, находятся в каталоге коллекции (например, `~/.ansible/collections/ansible_collections/prometheus/prometheus/roles/prometheus/handlers`).
 
 - **`inventory.yml`**  
   Список серверов (IP-адреса, группы) для Ansible.
@@ -263,7 +293,7 @@ collections:
 
 ## Развертывание инфраструктуры
 
-Процесс настройки и развертывания включает подготовку, создание ресурсов, настройку серверов.
+Процесс настройки и развертывания включает подготовку, создание ресурсов, настройку серверов и автоматизацию через CI/CD.
 
 ### 1. Подготовка
 
@@ -274,7 +304,7 @@ collections:
 - Создайте SSH-ключи для доступа к серверам.
 - Склонируйте репозиторий:
 ```
-git clone https://gitlab.pretix.devops-factory.com/pretix/pretix-infra.git
+git clone <URL-репозитория>
 cd pretix-infra
 ```
 
@@ -301,43 +331,33 @@ terraform apply
 
 ### 3. Настройка серверов (Ansible)
 
-Ansible настраивает сервисы на инстансе. Можно запустить все настройки одной командой через `all-install.yml` или выполнить плейбуки по отдельности.
+Ansible настраивает сервисы на инстансе, используя коллекции. Можно запустить все настройки одной командой через `all-install.yml` или выполнить плейбуки по отдельности.
 
 - Перейдите в папку Ansible:
 ```
 cd ansible
 ```
-- Запустите все настройки одной командой *(в разработке)* и введите пароль ansible-vault:
+- Установите коллекции и роли:
 ```
-ansible-playbook playbooks/all-install.yml --ask-vault-pass
+ansible-galaxy install -r requirements.yml
 ```
-- Альтернативно, запустите плейбуки по отдельности и введите пароль ansible-vault:
+- Запустите все настройки одной командой:
 ```
-ansible-playbook playbooks/setup_nginx.yml --ask-vault-pass
-ansible-playbook playbooks/setup_postgres.yml --ask-vault-pass
-ansible-playbook playbooks/setup_monitoring_stack.yml --ask-vault-pass
-ansible-playbook playbooks/setup_logging_stack.yml --ask-vault-pass
+ansible-playbook -i inventory.yml playbooks/all-install.yml
+```
+- Альтернативно, запустите плейбуки по отдельности:
+```
+ansible-playbook -i inventory.yml playbooks/setup_nginx.yml
+ansible-playbook -i inventory.yml playbooks/setup_docker.yml
+ansible-playbook -i inventory.yml playbooks/setup_postgres.yml
+ansible-playbook -i inventory.yml playbooks/setup_redis.yml
+ansible-playbook -i inventory.yml playbooks/setup_monitoring.yml
+ansible-playbook -i inventory.yml playbooks/setup_logging.yml
 ```
 
-## Гайд по шифрованию секретов через `ansible-vault`
+### 4. Настройка CI/CD
 
-1. Разделите ваш файл `defaults/main.yml` на два и поместите в директорию:
-* `defaults/main/main.yml`
-* `defaults/main/secret.yml`
-2. Перенесите чувствительные данные (пароли, токены) в файл `defaults/main/secret.yml`
-3. Файл `defaults/main/secret.yml` зашифруйте с помощью пароля (общий пароль находится в **Yandex.Cloud** -> **LockBox**) через `ansible-vault`:
-```
-ansible-vault encrypt roles/monitoring_stack/defaults/main/secret.yml
-```
-4. При запуске плейбука через `ansible-playbook` добавьте ключ `--ask-vault-pass` и введите пароль, иначе плейбук не запустится:
-```
-ansible-playbook playbooks/monitoring_stack.yml --ask-vault-pass
-```
-5. Для изменения содержимого можно расшифровать файл секретов *(не рекомендуется)*:
-```
-ansible-vault decrypt roles/monitoring_stack/defaults/main/secret.yml
-```
-6. Изменение секрета без его расшифровки через пароль:
-```
-ansible-vault edit roles/monitoring_stack/defaults/main/secret.yml
-```
+- Загрузите код в GitLab.
+- Настройте секреты (API-токен Yandex Cloud, SSH-ключи) в **GitLab Settings -> CI/CD -> Variables**.
+- Пайплайн в `.gitlab-ci.yml` автоматически выполнит Terraform и Ansible.
+

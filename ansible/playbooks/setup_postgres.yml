@@ -1,4 +1,4 @@
-- hosts: backend
+- hosts: mvp
   roles:
     - role: postgres
       vars:
