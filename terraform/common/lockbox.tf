@@ -36,7 +36,7 @@ resource "yandex_lockbox_secret" "grafana_admin" {
 }
 
 resource "yandex_lockbox_secret" "postgre_1" {
-  name = "[Backend] PostgreSQL user pretix password"
+  name        = "[Backend] PostgreSQL user pretix password"
   description = "Password for user pretix "
   labels = {
     "backend" = "postgres"
