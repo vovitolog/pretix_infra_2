@@ -1,2 +1,56 @@
 ---
-# tasks file for nginx
+- name: "Check that Docker API is available"
+  community.docker.docker_host_info:
+  register: docker_info
+  failed_when: docker_info is failed
+  changed_when: false
+
+- name: Copy Nginx config file
+  ansible.builtin.copy:
+    src: mvp.pretix.devops-factory.com.conf
+    dest: nginx/conf/mvp.pretix.devops-factory.com.conf
+    owner: justanleek
+    group: justanleek
+    mode: u=rw,g=rw,o=r
+
+- name: "Ensure Docker network pretix-network exists"
+  community.docker.docker_network:
+    name: "{{ network }}"
+    state: present
+  register: network_exists
+  ignore_errors: yes
+
+- name: "Create Docker network pretix"
+  community.docker.docker_network:
+    name: "{{ network }}"
+  when: network_exists is failed
+
+- name: "Ensure Docker volume exists"
+  community.docker.docker_volume_info:
+    name: "{{ volume }}"
+  register: volume_exists
+
+- name: "Does volume exists"
+  ansible.builtin.debug:
+    msg: "The volume {{ 'exists' if volume_exists.exists }}"
+
+- name: "Create Docker volume"
+  community.docker.docker_volume:
+    name: "{{ volume }}"
+    state: present
+  when: volume_exists is failed
+
+- name: "Deploy Nginx in Docker"
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image }}"
+    state: started
+    ports: "{{ ports }}"
+    networks:
+      - name: "{{ network }}"
+    volumes:
+      - ./conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www/:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - "{{ volume }}:/pretix/src/pretix/static.dist"
+    restart_policy: "{{ restart_policy }}"
