@@ -1,7 +1,6 @@
 ---
 - name: Deploy Nginx in Docker
   hosts: mvp
-  become: true
   collections:
     - community.docker
   roles:
