@@ -13,32 +13,14 @@
     group: justanleek
     mode: u=rw,g=rw,o=r
 
-- name: "Ensure Docker network pretix-network exists"
+- name: "Ensure Docker network pretix-network exists or create if none"
   community.docker.docker_network:
     name: "{{ network }}"
     state: present
-  register: network_exists
-  ignore_errors: yes
 
-- name: "Create Docker network pretix"
-  community.docker.docker_network:
-    name: "{{ network }}"
-  when: network_exists is failed
-
-- name: "Ensure Docker volume exists"
-  community.docker.docker_volume_info:
-    name: "{{ volume }}"
-  register: volume_exists
-
-- name: "Does volume exists"
-  ansible.builtin.debug:
-    msg: "The volume {{ 'exists' if volume_exists.exists }}"
-
-- name: "Create Docker volume"
+- name: "Ensure Docker volume exists or create if none"
   community.docker.docker_volume:
     name: "{{ volume }}"
-    state: present
-  when: volume_exists is failed
 
 - name: "Deploy Nginx in Docker"
   community.docker.docker_container:
