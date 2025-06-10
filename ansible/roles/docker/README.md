@@ -1,38 +1,34 @@
-Role Name
-=========
+# Ansible Role: Docker Installation
 
-A brief description of the role goes here.
+This Ansible role automates the installation of Docker on Ubuntu 24.04 systems. It ensures that Docker is installed, configured, and running on the target machines.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.15 or higher
+- Target machines running Ubuntu 24.04
+- SSH access to the target machines
+- Sudo privileges on the target machines
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+The role defines several variables that can be overridden to customize the installation process. These variables are defined in `defaults/main.yml`:
 
-Dependencies
-------------
+- `apt_https_packages`: List of packages required to allow apt to use a repository over HTTPS.
+- `docker_packages`: List of Docker packages to install.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Dependencies
 
-Example Playbook
-----------------
+This role does not have any external dependencies.
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+## Example Playbook
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+To use this role, create a playbook that includes the role. Here is an example playbook:
 
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+---
+- name: Install Docker on Ubuntu 24.04
+  hosts: servers
+  become: true
+  roles:
+    - docker
+```
