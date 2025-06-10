@@ -1,8 +1,7 @@
 server {
     listen 80;
-    listen [::]:80;
 
-    server_name mvp.pretix.devops-factory.com;
+    server_name {{ item.url }};
     server_tokens off;
 
     location /.well-known/acme-challenge/ {
@@ -10,19 +9,19 @@ server {
     }
 
     location / {
-        return 301 https://mvp.pretix.devops-factory.com$request_uri;
+        return 301 https://$host$request_uri;
     }
 }
 server {
     listen 443 default_server ssl;
 
-    server_name mvp.pretix.devops-factory.com;
+    server_name {{ item.url }};
 
-    ssl_certificate /etc/nginx/ssl/live/mvp.pretix.devops-factory.com/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/live/mvp.pretix.devops-factory.com/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/live/$host/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/live/$host/privkey.pem;
 
     location / {
-        proxy_pass https://pretix-web:8345;
+        proxy_pass https://{{ item.proxy }}:8345;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header Host $http_host;

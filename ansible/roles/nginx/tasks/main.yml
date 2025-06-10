@@ -5,13 +5,12 @@
   failed_when: docker_info is failed
   changed_when: false
 
-- name: Copy Nginx config file
-  ansible.builtin.copy:
-    src: mvp.pretix.devops-factory.com.conf
-    dest: nginx/conf/mvp.pretix.devops-factory.com.conf
-    owner: justanleek
-    group: justanleek
+- name: "Copy Nginx configuration files"
+  template:
+    src: default.conf.j2
+    dest: "{{ item.url }}.conf"
     mode: u=rw,g=rw,o=r
+  with_items: "{{ list_of_urls }}"
 
 - name: "Ensure Docker network pretix-network exists or create if none"
   community.docker.docker_network:
@@ -31,8 +30,7 @@
     networks:
       - name: "{{ network }}"
     volumes:
-      - ./conf/:/etc/nginx/conf.d/:ro
-      - ./certbot/www/:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - nginx/conf/:/etc/nginx/conf.d/:ro
+      - nginx/certbot/conf/:/etc/nginx/ssl/:ro
       - "{{ volume }}:/pretix/src/pretix/static.dist"
     restart_policy: "{{ restart_policy }}"

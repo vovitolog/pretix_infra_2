@@ -14,6 +14,7 @@ On a target instance must be installed Docker. Role doesnt install Docker
 | `container_name`  | Name of container   |
 | `ports`    | Host:Conatiner  |
 | `restart_policy` | Policy of restart container          |
+| `list_of_urls` | List urls with proxy addreses for Nginx |
 
 ## Dependencies
 
