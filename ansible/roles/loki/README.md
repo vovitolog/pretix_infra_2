@@ -1,38 +1,45 @@
-Role Name
-=========
+# Ansible Role: Loki Deployment
 
-A brief description of the role goes here.
+This Ansible role automates the deployment of Grafana Loki using Docker containers.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.15 or higher
+- Target machines running Ubuntu 24.04
+- Target machines with Docker installed
+- SSH access to the target machines
+- Sudo privileges on the target machines
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+The role defines several variables that can be overridden to customize the deployment process. These variables are defined in `defaults/main.yml`:
 
-Dependencies
-------------
+- `loki_version`: The version of Loki to deploy. Default is `"3.5.1"`.
+- `loki_path`: The directory path where Loki will store its data and configuration. Default is `"/opt/loki"`.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Dependencies
 
-Example Playbook
-----------------
+This role assumes that Docker is already installed on the target system. You can use the `docker` role to ensure Docker is installed:
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yaml
+- name: Ensure Docker is installed
+  include_role:
+    name: docker
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Example Playbook
 
-License
--------
+To use this role, create a playbook that includes the role. Here is an example playbook:
 
-BSD
+```yaml
+---
+- name: Deploy of Grafana Loki using Docker containers
+  hosts: loki-server
+  become: true
+  vars:
+    loki_version: "3.5.1"
+    loki_path: "/opt/loki"
+  roles:
+    - loki
 
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```

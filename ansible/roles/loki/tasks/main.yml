@@ -1,2 +1,37 @@
 ---
-# tasks file for loki
+- name: Ensure Docker is installed
+  include_role:
+    name: docker
+
+- name: Create directory for Loki storage
+  file:
+    path: "{{ loki_path }}/data"
+    state: directory
+    owner: 10001
+    group: 10001
+    mode: '0700'
+
+- name: Create directory for Loki etc
+  file:
+    path: "{{ loki_path }}/etc"
+    state: directory
+    mode: '0755'
+
+- name: Copy Loki configuration
+  template:
+    src: files/loki-config.yml
+    dest: "{{ loki_path }}/etc/local-config.yaml"
+  notify:
+    - Restart Loki
+
+- name: Run Loki Docker container
+  docker_container:
+    name: loki
+    image: "grafana/loki:{{ loki_version }}"
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - "{{ loki_path }}/data:/loki"
+      - "{{ loki_path }}/etc/local-config.yaml:/etc/loki/local-config.yaml"

@@ -1,5 +1,10 @@
 ---
-- hosts: localhost
-  remote_user: root
+- name: Test Loki deployment
+  hosts: localhost
+  become: true
+  vars:
+    loki_version: "3.5.1"
+    loki_path: "/opt/loki"
+
   roles:
     - loki

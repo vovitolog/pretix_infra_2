@@ -1,2 +1,3 @@
 ---
-# defaults file for loki
+loki_version: "3.5.1"
+loki_path: "/opt/loki"
