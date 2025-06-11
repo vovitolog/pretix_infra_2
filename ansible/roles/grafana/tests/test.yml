@@ -1,5 +1,14 @@
 ---
-- hosts: localhost
-  remote_user: root
+- name: Test Grafana deployment
+  hosts: localhost
+  become: true
+  vars:
+    grafana_version: "12.0.1-ubuntu"
+    grafana_path: "/opt/grafana"
+    loki_hostname: loki
+    prometheus_hostname: prometheus
+    grafana_admin_user: admin
+    grafana_admin_password: admin
+
   roles:
     - grafana

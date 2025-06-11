@@ -1,2 +1,46 @@
 ---
-# tasks file for grafana
+- name: Create directory for Grafana storage
+  file:
+    path: "{{ grafana_path }}/data"
+    state: directory
+    owner: 472
+    mode: '0700'
+
+- name: Create directory for Grafana etc
+  file:
+    path: "{{ grafana_path }}/etc/provisioning/datasources"
+    state: directory
+    mode: '0755'
+
+- name: Copy Grafana configuration file from template
+  template:
+    src: grafana.ini.j2
+    dest: "{{ grafana_path }}/etc/grafana.ini"
+  notify: Restart Grafana
+
+- name: Copy Grafana provisioning file from template
+  template:
+    src: ds.yaml.j2
+    dest: "{{ grafana_path }}/etc/provisioning/datasources/ds.yaml"
+  notify: Restart Grafana
+
+- name: Run Grafana container
+  docker_container:
+    name: grafana
+    image: "grafana/grafana-oss:{{ grafana_version }}"
+    ports:
+      - "3000:3000"
+    volumes:
+      - "{{ grafana_path }}/etc:/etc/grafana"
+      - "{{ grafana_path }}/data:/var/lib/grafana"
+    restart_policy: unless-stopped
+    state: started
+
+- name: Ensure Grafana is running
+  docker_container_info:
+    name: grafana
+  register: grafana_container_info
+
+- name: Display Grafana container status
+  debug:
+    var: grafana_container_info.container.State.Status

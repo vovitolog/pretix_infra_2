@@ -1,38 +1,54 @@
-Role Name
-=========
+# Ansible Role: Grafana Deployment
 
-A brief description of the role goes here.
+This Ansible role automates the deployment of Grafana using Docker containers.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.15 or higher
+- Target machines running Ubuntu 24.04
+- Target machines with Docker installed
+- SSH access to the target machines
+- Sudo privileges on the target machines
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+The role defines several variables that can be overridden to customize the deployment process. These variables are defined in `defaults/main.yml`:
 
-Dependencies
-------------
+- `grafana_version`: The version of Grafana to deploy. Default is `"12.0.1-ubuntu"`.
+- `grafana_path`: The directory path where Grafana will store its data and configuration. Default is `"/opt/grafana"`.
+- `loki_hostname`: Hostname for Loki datasource. Default is `"loki"`.
+- `prometheus_hostname`: Hostname for Prometheus datasource. Default is `"prometheus"`.
+- `grafana_admin_user`: Grafana admin username. Default is not set.
+- `grafana_admin_password`: Grafana admin password. Default is not set.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Dependencies
 
-Example Playbook
-----------------
+This role assumes that Docker is already installed on the target system. You can use the `docker` role to ensure Docker is installed:
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yaml
+- name: Ensure Docker is installed
+  include_role:
+    name: docker
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Example Playbook
 
-License
--------
+To use this role, create a playbook that includes the role. Here is an example playbook:
 
-BSD
+```yaml
+---
+- name: Deploy of Grafana using Docker containers
+  hosts: grafana-server
+  become: true
+  vars:
+    grafana_version: "12.0.1-ubuntu"
+    grafana_path: "/opt/grafana"
+    loki_hostname: loki
+    prometheus_hostname: prometheus
+    grafana_admin_user: admin
+    grafana_admin_password: admin
 
-Author Information
-------------------
+  roles:
+    - grafana
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```

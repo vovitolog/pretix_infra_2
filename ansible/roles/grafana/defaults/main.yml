@@ -1,2 +1,5 @@
 ---
-# defaults file for grafana
+grafana_version: 12.0.1-ubuntu
+grafana_path: /opt/grafana
+loki_hostname: loki
+prometheus_hostname: prometheus

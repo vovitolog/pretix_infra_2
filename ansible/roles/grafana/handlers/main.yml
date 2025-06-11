@@ -1,2 +1,5 @@
 ---
-# handlers file for grafana
+- name: Restart Grafana
+  docker_container:
+    name: grafana
+    restart: yes
