@@ -3,5 +3,12 @@ mvp:
   hosts:
     mvp-standalone:
       ansible_user: pipeline
-      ansible_host: mvp.pretix.devops-factory.com
+      #ansible_host: mvp.pretix.devops-factory.com
+      ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
+
+monitoring:
+  hosts:
+    main-monitoring:
+      ansible_user: pipeline
+      ansible_host: 158.160.181.223
       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
