@@ -1,8 +1,4 @@
 ---
-- name: Ensure Docker is installed
-  include_role:
-    name: docker
-
 - name: Create directory for Loki storage
   file:
     path: "{{ loki_path }}/data"
