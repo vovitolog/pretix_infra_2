@@ -1,57 +1,89 @@
 ---
-- name: Ensure required packages are installed
-  ansible.builtin.apt:
-    name:
-      - docker.io
-      - docker-compose
+- name: Check if Docker is installed (using command)
+  ansible.builtin.command: docker --version
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Fail if Docker is not installed
+  ansible.builtin.fail:
+    msg: "Docker is not installed. Please install Docker first."
+  when: docker_check.rc != 0
+
+- name: Check if user is in docker group
+  ansible.builtin.shell: "id -nG | grep -qw docker"
+  register: docker_group_check
+  changed_when: false
+  ignore_errors: yes
+
+- name: Fail if user is not in docker group
+  ansible.builtin.fail:
+    msg: "Current user is not in 'docker' group. Please add user to 'docker' group and reload session."
+  when: docker_group_check.rc != 0
+
+- name: Create Docker network
+  community.docker.docker_network:
+    name: "{{ container_network }}"
+    driver: bridge
     state: present
-  become: true
 
-- name: Ensure Docker service is running
-  ansible.builtin.service:
-    name: docker
-    state: started
-    enabled: true
-  become: true
-
-- name: Create directories for Prometheus, Alertmanager, and Grafana
-  ansible.builtin.file:
-    path: "{{ item.path }}"
-    state: directory
-    mode: "{{ item.mode }}"
-    owner: "{{ item.owner | default('root') }}"
-    group: "{{ item.group | default('root') }}"
+- name: Create Docker volumes for Prometheus, Alertmanager, and Grafana
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
   loop:
-    - { path: /opt/prometheus, mode: '0755' }
-    - { path: /opt/alertmanager, mode: '0755' }
-    - { path: /opt/grafana, mode: '0775', owner: '472', group: '472' }
+    - prometheus_data
+    - alertmanager_data
+    - grafana_data
+
+- name: Create directories for Prometheus and Alertmanager configuration
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /home/pipeline/monitoring/prometheus
+    - /home/pipeline/monitoring/alertmanager
+    - /home/pipeline/monitoring/grafana
+    - /home/pipeline/monitoring/alertmanager/templates
 
 - name: Copy Prometheus configuration file
   ansible.builtin.copy:
     src: files/prometheus.yml
-    dest: /opt/prometheus/prometheus.yml
+    dest: /home/pipeline/monitoring/prometheus/prometheus.yml
     mode: '0644'
+  notify: Restart Prometheus
 
 - name: Copy Prometheus rules file
   ansible.builtin.copy:
     src: files/rules.yml
-    dest: /opt/prometheus/rules.yml
+    dest: /home/pipeline/monitoring/prometheus/rules.yml
     mode: '0644'
+  notify: Restart Prometheus
 
 - name: Copy Alertmanager configuration file
   ansible.builtin.template:
     src: templates/alertmanager.yml.j2
-    dest: /opt/alertmanager/alertmanager.yml
+    dest: /home/pipeline/monitoring/alertmanager/alertmanager.yml
     mode: '0644'
+  notify: Restart Alertmanager
+
+- name: Copy telegram template file
+  ansible.builtin.copy:
+    src: files/telegram.tmpl
+    dest: /home/pipeline/monitoring/alertmanager/templates/telegram.tmpl
+    mode: '0644'
+  notify: Restart Alertmanager
 
 - name: Copy docker-compose configuration
   ansible.builtin.template:
     src: templates/docker-compose.yml.j2
-    dest: /opt/docker-compose.yml
+    dest: /home/pipeline/monitoring/docker-compose.yml
     mode: '0644'
+  notify: Restart Docker Compose Stack
 
 - name: Ensure Docker Compose stack is up
   ansible.builtin.command:
-    cmd: docker-compose -f /opt/docker-compose.yml up -d
-    chdir: /opt
+    cmd: docker-compose -f /home/pipeline/monitoring/docker-compose.yml up -d
+    chdir: /home/pipeline/monitoring
   changed_when: true
