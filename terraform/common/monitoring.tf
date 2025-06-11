@@ -1,24 +1,24 @@
 data "yandex_compute_image" "ubuntu" {
-  family = var.vm_os_family_mon
+  family = var.mon_vm_os_family
 }
 
 resource "yandex_compute_instance" "monitoring" {
   name        = "monitoring-instance"
-  platform_id = var.vm_platform_mon
+  platform_id = var.mon_vm_platform
   zone        = var.default_zone
 
   resources {
-    cores         = var.vm_cores_mon
-    memory        = var.vm_memory_mon
-    core_fraction = var.vm_core_fraction_mon
+    cores         = var.mon_vm_cores
+    memory        = var.mon_vm_memory
+    core_fraction = var.mon_vm_core_fraction
   }
 
   boot_disk {
     auto_delete = true
     initialize_params {
       image_id = data.yandex_compute_image.ubuntu.id
-      size     = var.vm_disk_size_mon
-      type     = var.vm_disk_type_mon
+      size     = var.mon_vm_disk_size
+      type     = var.mon_vm_disk_type
     }
   }
 
