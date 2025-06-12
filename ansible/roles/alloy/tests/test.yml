@@ -1,5 +1,11 @@
 ---
-- hosts: localhost
-  remote_user: root
+- name: Test Alloy deployment
+  hosts: localhost
+  become: true
+  vars:
+    grafana_version: "v1.9.1 "
+    grafana_path: "/opt/alloy"
+    loki_hostname: loki-server
+
   roles:
     - alloy

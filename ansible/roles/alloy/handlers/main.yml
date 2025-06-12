@@ -1,2 +1,5 @@
 ---
-# handlers file for alloy
+- name: Restart Alloy
+  docker_container:
+    name: alloy
+    restart: yes

@@ -1,2 +1,42 @@
 ---
-# tasks file for alloy
+- name: Create directory for Alloy etc
+  file:
+    path: "{{ alloy_path }}/etc/provisioning/datasources"
+    state: directory
+    mode: '0755'
+
+- name: Copy Alloy configuration file from template
+  template:
+    src: config.alloy.j2
+    dest: "{{ alloy_path }}/etc/config.alloy"
+  notify: Restart Alloy
+
+- name: Run Alloy container
+  docker_container:
+    name: alloy
+    image: "grafana/alloy:{{ alloy_version }}"
+    # ports:
+    #   - "12345:12345"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log:ro
+      - "{{ alloy_path }}/etc/config.alloy:/etc/alloy/config.alloy:ro"
+      - "{{ alloy_path }}/data:/var/lib/alloy/data"
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    restart_policy: unless-stopped
+    network_mode: host
+    hostname: "{{ ansible_hostname }}"
+    state: started
+
+- name: Ensure Alloy is running
+  docker_container_info:
+    name: alloy
+  register: alloy_container_info
+
+- name: Display Alloy container status
+  debug:
+    var: alloy_container_info.container.State.Status
