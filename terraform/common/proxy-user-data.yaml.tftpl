@@ -1,0 +1,63 @@
+#cloud-config
+ssh_pwauth: false
+swap:
+  filename: /swapfile
+  size: 4G
+  maxsize: 6G
+
+groups:
+  - docker
+
+users:
+  %{~ for idx, user in users ~}
+  - name: ${user.name}
+    primary_group: ${user.name}
+    uid: ${2124 + idx * 13}
+    groups:
+      - sudo
+      - docker
+    lock_passwd: true
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+  %{~ for ssh_key in user.ssh_pub_keys ~}
+      - ${ssh_key}
+  %{~ endfor ~}
+  %{~ endfor ~}
+  %{~ for idx, service in services ~}
+  - name: ${service.name}
+    primary_group: ${service.name}
+    uid: ${4000 + idx}
+    groups:
+      - docker
+  %{~ if service.is_sudoer ~}
+      - sudo
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+  %{~ endif ~}
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${service.ssh_pub_key}
+  %{~ endfor ~}
+
+package_update: true
+package_upgrade: true
+packages:
+  - openssh-server
+  - vim
+  - python3
+  - curl
+  - iptables-persistent
+  - python3-venv
+runcmd:
+  - echo "net.ipv4.ip_forward=1" >> /etc/90-nat-for-instances.conf
+  - sysctl -p /etc/90-nat-for-instances.conf
+  - iptables -t nat -A POSTROUTING -s 10.130.0.0/21 -o eth0 -j MASQUERADE
+  - iptables -I FORWARD 1 -s 10.130.0.0/21 -j ACCEPT
+  - iptables -I FORWARD 2 -d 10.130.0.0/21 -j ACCEPT
+  - iptables-save > /etc/iptables/rules.v4
+  - systemctl restart iptables-persistent
+  - curl -fsL https://get.docker.com/ | sh
+  - sysctl -p /etc/90-nat-for-instances.conf
+bootcmd:
+  - sysctl -p /etc/90-nat-for-instances.conf || true
