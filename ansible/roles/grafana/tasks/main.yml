@@ -28,12 +28,13 @@
   docker_container:
     name: grafana
     image: "grafana/grafana-oss:{{ grafana_version }}"
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     volumes:
       - "{{ grafana_path }}/etc:/etc/grafana"
       - "{{ grafana_path }}/data:/var/lib/grafana"
     restart_policy: unless-stopped
+    network_mode: host
     state: started
 
 - name: Ensure Grafana is running
