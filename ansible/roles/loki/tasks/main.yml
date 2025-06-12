@@ -31,3 +31,13 @@
     volumes:
       - "{{ loki_path }}/data:/loki"
       - "{{ loki_path }}/etc/local-config.yaml:/etc/loki/local-config.yaml"
+    command: -config.file=/etc/loki/local-config.yaml
+
+- name: Ensure Loki is running
+  docker_container_info:
+    name: loki
+  register: loki_container_info
+
+- name: Display Loki container status
+  debug:
+    var: loki_container_info.container.State.Status
