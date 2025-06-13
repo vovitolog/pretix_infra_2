@@ -1,0 +1,50 @@
+#cloud-config
+ssh_pwauth: false
+swap:
+  filename: /swapfile
+  size: 2G
+  maxsize: 4G
+
+users:
+  %{~ for idx, user in users ~}
+  - name: ${user.name}
+    primary_group: ${user.name}
+    uid: ${2124 + idx * 13}
+    groups:
+      - sudo
+    lock_passwd: true
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+  %{~ for ssh_key in user.ssh_pub_keys ~}
+      - ${ssh_key}
+  %{~ endfor ~}
+  %{~ endfor ~}
+  %{~ for idx, service in services ~}
+  - name: ${service.name}
+    primary_group: ${service.name}
+    uid: ${4000 + idx}
+  %{~ if service.is_sudoer ~}
+      - sudo
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+  %{~ endif ~}
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${service.ssh_pub_key}
+  %{~ endfor ~}
+
+package_update: true
+package_upgrade: true
+packages:
+  - openssh-server
+  - vim
+  - python3
+  - nfs-kernel-server
+runcmd:
+  - mkdir -p /srv/nfs-pretix
+  - chown nobody:nogroup /srv/nfs-pretix
+  - chmod 777 /srv/nfs-pretix
+  - echo "/srv/nfs-pretix ${proxy_cidr}(rw,sync,no_subtree_check) ${dev_cidr}(rw,sync,no_subtree_check)" >> /etc/exports
+  - exportfs -a
+  - exportfs -r

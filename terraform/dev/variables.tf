@@ -75,3 +75,9 @@ variable "vm_cores" {
   default     = 2
   description = "Number of CPU cores vm will have"
 }
+
+variable "vm_dns_name" {
+  type        = string
+  default     = "dev.pretix.devops-factory.com"
+  description = "Internal DNS name of dev server, without dot at the end"
+}

@@ -1,24 +1,24 @@
-data "yandex_compute_image" "dev_instance" {
-  family = var.vm_os_family
+data "yandex_compute_image" "nfs" {
+  family = var.nfs_os_family
 }
 
-resource "yandex_compute_instance" "dev_singleton" {
-  name        = "development-instance"
+resource "yandex_compute_instance" "nfs_dev" {
+  name        = "nfs-for-dev"
+  hostname    = var.nfs_dns_name
   platform_id = var.vm_platform
   zone        = local.common.dev_net.zone
-  hostname    = var.vm_dns_name
 
   resources {
-    cores         = var.vm_cores
-    memory        = var.vm_memory
-    core_fraction = var.vm_core_fraction
+    cores         = var.nfs_cores
+    memory        = var.nfs_memory
+    core_fraction = var.nfs_core_fraction
   }
 
   boot_disk {
     auto_delete = true
     initialize_params {
-      image_id = data.yandex_compute_image.dev_instance.id
-      size     = var.vm_disk_size
+      image_id = data.yandex_compute_image.nfs.id
+      size     = var.nfs_disk_size
       type     = var.vm_disk_type
     }
   }
@@ -26,13 +26,13 @@ resource "yandex_compute_instance" "dev_singleton" {
   network_interface {
     subnet_id  = data.yandex_vpc_subnet.development.id
     nat        = false
-    ip_address = cidrhost(local.common.dev_net.cidr, 3)
+    ip_address = cidrhost(local.common.dev_net.cidr, 4)
     security_group_ids = [
       local.common.sg_id.dev_default,
       local.common.sg_id.internet_egress
     ]
     dns_record {
-      fqdn = "${var.vm_dns_name}."
+      fqdn = "${var.nfs_dns_name}."
       ttl  = 300
     }
   }
@@ -42,11 +42,12 @@ resource "yandex_compute_instance" "dev_singleton" {
   }
 
   metadata = {
-    user-data = templatefile("${path.module}/user-data.yaml.tftpl", {
-      users    = var.users
-      services = var.service_users
+    user-data = templatefile("${path.module}/nfs-user-data.yaml.tftpl", {
+      users      = var.users
+      services   = var.service_users
+      proxy_cidr = local.common.proxy_net.cidr
+      dev_cidr   = local.common.dev_net.cidr
     })
-    runner-token = var.gitlab_runner_token
   }
 
   provisioner "local-exec" {
