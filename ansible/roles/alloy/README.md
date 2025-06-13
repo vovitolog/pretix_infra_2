@@ -38,8 +38,8 @@ To use this role, create a playbook that includes the role. Here is an example p
   hosts: all
   become: true
   vars:
-    grafana_version: "v1.9.1"
-    grafana_path: "/opt/alloy"
+    alloy_version: "v1.9.1"
+    alloy_path: "/opt/alloy"
     loki_hostname: loki
 
   roles:
