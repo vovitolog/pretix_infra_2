@@ -38,7 +38,7 @@ To use this role, create a playbook that includes the role. Here is an example p
 ```yaml
 ---
 - name: Deploy of Grafana using Docker containers
-  hosts: grafana-server
+  hosts: grafana_server
   become: true
   vars:
     grafana_version: "12.0.1-ubuntu"
