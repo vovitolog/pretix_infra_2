@@ -226,4 +226,31 @@ resource "yandex_vpc_security_group" "mvp_default_sg" {
     description    = "Allow inbound from monitoring subnet"
     v4_cidr_blocks = [var.mon_subnet_cidr]
   }
+
+  ingress {
+    protocol = "TCP"
+    description = "Allow incoming HTTP connections to MVP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port = 80
+  }
+
+  ingress {
+    protocol = "TCP"
+    description = "Allow incoming HTTPS connections to MVP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port = 443
+  }
+
+  ingress {
+    protocol = "TCP"
+    description = "Allow incoming SSH connections to MVP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port = 22
+  }
+
+  ingress {
+    protocol = "ICMP"
+    description = "Allow pings for troubleshooting to MVP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
 }
