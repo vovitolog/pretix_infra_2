@@ -1,0 +1,67 @@
+server {
+    listen 80;
+
+    server_name {{ item.url }};
+    server_tokens off;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+server {
+    listen 443 default_server ssl;
+
+    server_name {{ item.url }};
+
+    ssl_certificate /etc/nginx/ssl/live/$host/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/live/$host/privkey.pem;
+
+    location / {
+        proxy_pass https://{{ item.proxy }}:8345;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Host $http_host;
+
+    }
+
+    # Media files
+    location /media/ {
+        alias /data/media/;
+        expires 7d;
+        access_log off;
+    }
+
+    # Protected directories
+    location ^~ /media/cachedfiles {
+        deny all;
+        return 404;
+    }
+    location ^~ /media/invoices {
+        deny all;
+        return 404;
+    }
+
+
+    location /static/ {
+        alias /pretix/src/pretix/static.dist/;
+        access_log off;
+        expires 365d;
+        add_header Cache-Control "public";
+        add_header Access-Control-Allow-Origin "*";
+        gzip on;
+    }
+
+    # Block access to sensitive files
+    location /static/staticfiles.json {
+        deny all;
+        return 404;
+    }
+    location /static/CACHE/manifest.json {
+        deny all;
+        return 404;
+    }
+}

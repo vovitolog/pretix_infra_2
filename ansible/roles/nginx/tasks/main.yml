@@ -1,2 +1,36 @@
 ---
-# tasks file for nginx
+- name: "Check that Docker API is available"
+  community.docker.docker_host_info:
+  register: docker_info
+  failed_when: docker_info is failed
+  changed_when: false
+
+- name: "Copy Nginx configuration files"
+  template:
+    src: default.conf.j2
+    dest: "{{ item.url }}.conf"
+    mode: u=rw,g=rw,o=r
+  with_items: "{{ list_of_urls }}"
+
+- name: "Ensure Docker network pretix-network exists or create if none"
+  community.docker.docker_network:
+    name: "{{ network }}"
+    state: present
+
+- name: "Ensure Docker volume exists or create if none"
+  community.docker.docker_volume:
+    name: "{{ volume }}"
+
+- name: "Deploy Nginx in Docker"
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image }}"
+    state: started
+    ports: "{{ ports }}"
+    networks:
+      - name: "{{ network }}"
+    volumes:
+      - nginx/conf/:/etc/nginx/conf.d/:ro
+      - nginx/certbot/conf/:/etc/nginx/ssl/:ro
+      - "{{ volume }}:/pretix/src/pretix/static.dist"
+    restart_policy: "{{ restart_policy }}"
