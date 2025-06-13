@@ -1,0 +1,9 @@
+---
+- name: Deploy node exporter
+  hosts: mvp
+  roles:
+    - role: node_exporter
+      vars:
+        # Network configuration for Docker containers
+        # Defines the Docker network used by the monitoring stack
+        # container_network: "monitoring_network"

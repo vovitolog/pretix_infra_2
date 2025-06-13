@@ -1,0 +1,12 @@
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User={{ node_exporter_user }}
+Group={{ node_exporter_group }}
+ExecStart={{ node_exporter_binary }} --web.listen-address=:{{ node_exporter_port }}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
