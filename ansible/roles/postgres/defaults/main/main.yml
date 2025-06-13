@@ -1,0 +1,10 @@
+---
+postgres_version: "17.5-alpine"                             # PostgreSQL image tag
+postgres_ip_port: "127.0.0.1:5432"                          # Default port: 5432
+postgres_volume_name: "postgres_data"                       # Persistent data volume
+postgres_container_name: "pretix-postgres"                  # Default container name
+postgres_db: "pretix"                                       # Default database name
+postgres_user: "pretix"                                     # Default database user
+container_network: "pretix-network"                         # Default network for container
+gitlab_registry: "gitlab.pretix.devops-factory.com:5050"    # Default Registry for docker
+gitlab_registry_location: "/pretix/pretix-ci-cd"            # Default Registry location for docker

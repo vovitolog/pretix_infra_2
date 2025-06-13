@@ -2,10 +2,6 @@ service_users = [
   {
     name        = "pipeline"
     ssh_pub_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBHf4TBRDGORFct+P8Ak+FaN0zqHtUWTwNslimwuA65p"
-  },
-  {
-    name        = "test"
-    ssh_pub_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMKHh8anvrM3rQUA2YtchnDpb/sTMBUhJa/VISUMJwkg"
   }
 ]
 

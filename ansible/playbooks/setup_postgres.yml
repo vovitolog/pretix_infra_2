@@ -1,0 +1,14 @@
+- hosts: mvp
+  roles:
+    - role: postgres
+      vars:
+        # By default, all variables are set correctly and do not require changes. You can change them if necessary
+        # postgres_version: "17.5-alpine"
+        # postgres_password: "***"
+        # postgres_db: "pretix"
+        # postgres_user: "pretix"
+        # postgres_ip_port: "127.0.0.1:5432"
+        # postgres_data_dir: "/postgres_data"  
+        # docker_registry_token_name: "GitLab Registry"
+        # docker_registry_token: "***"
+        # container_network: "pretix-network"

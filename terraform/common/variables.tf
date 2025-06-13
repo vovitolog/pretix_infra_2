@@ -1,13 +1,18 @@
-variable "zone" {
+variable "vm_os_family" {
   type        = string
-  default     = "ru-central1-d"
-  description = "Default zone, if not specified will be used"
+  default     = "ubuntu-2404-lts"
+  description = "Default OS image to use"
 }
 
-variable "gitlab_runner_token" {
+variable "vm_disk_type" {
+  type    = string
+  default = "network-ssd"
+}
+
+variable "vm_platform" {
   type        = string
-  sensitive   = true
-  description = "The necessary GitLab runner token to authenticate GitLab runner"
+  default     = "standard-v3"
+  description = "ID of the CPU architecture"
 }
 
 variable "users" {

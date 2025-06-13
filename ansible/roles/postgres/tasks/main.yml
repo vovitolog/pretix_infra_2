@@ -1,2 +1,88 @@
----
-# tasks file for postgres
+- name: Check if Docker is installed (using command)
+  ansible.builtin.command: docker --version
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Fail if Docker is not installed
+  ansible.builtin.fail:
+    msg: "Docker is not installed. Please install Docker first."
+  when: docker_check.rc != 0
+
+- name: Check if user is in docker group
+  ansible.builtin.shell: "id -nG | grep -qw docker"
+  register: docker_group_check
+  changed_when: false
+  ignore_errors: yes
+
+- name: Fail if user is not in docker group
+  ansible.builtin.fail:
+    msg: "Current user is not in 'docker' group. Please add user to 'docker' group and reload session."
+  when: docker_group_check.rc != 0
+
+- name: Log in to GitLab Docker registry
+  community.docker.docker_login:
+    registry_url: "{{ gitlab_registry }}"
+    username: "{{ docker_registry_token_name }}"
+    password: "{{ docker_registry_token }}"
+  no_log: true
+
+- name: Create Docker network
+  community.docker.docker_network:
+    name: "{{ container_network }}"
+    driver: bridge
+    state: present
+
+- name: Create Docker volume for PostgreSQL data
+  community.docker.docker_volume:
+    name: "{{ postgres_volume_name }}"
+    state: present
+
+- name: Run PostgreSQL container
+  community.docker.docker_container:
+    name: "{{ postgres_container_name }}"
+    image: "{{ gitlab_registry }}{{ gitlab_registry_location }}/postgres:{{ postgres_version }}"
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "{{ postgres_ip_port }}:5432"
+    env:
+      POSTGRES_DB: "{{ postgres_db }}"
+      POSTGRES_USER: "{{ postgres_user }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
+    volumes:
+      - "{{ postgres_volume_name }}:/var/lib/postgresql/data"
+    networks:
+      - name: "{{ container_network }}"
+  register: container_run
+
+- name: Wait for PostgreSQL container to be running
+  community.docker.docker_container_info:
+    name: "{{ postgres_container_name }}"
+  register: container_info
+  until: container_info.exists and container_info.container.State.Running
+  retries: 6
+  delay: 5
+  when: container_run.changed
+
+- name: Check if pg_hba.conf contains the required entry
+  community.docker.docker_container_exec:
+    container: "{{ postgres_container_name }}"
+    command: grep -Fx "host pretix pretix 172.17.0.1/16 md5" /var/lib/postgresql/data/pg_hba.conf
+  register: pg_hba_check
+  changed_when: false
+  failed_when: false
+
+- name: Add entry to pg_hba.conf if not present
+  community.docker.docker_container_exec:
+    container: "{{ postgres_container_name }}"
+    command: sh -c 'echo "host pretix pretix 172.17.0.1/16 md5" >> /var/lib/postgresql/data/pg_hba.conf'
+  when: pg_hba_check.rc != 0
+  register: pg_hba_update
+
+- name: Restart PostgreSQL container to apply pg_hba.conf changes
+  community.docker.docker_container:
+    name: "{{ postgres_container_name }}"
+    state: started
+    restart: true
+  when: pg_hba_update is defined and pg_hba_update.changed
