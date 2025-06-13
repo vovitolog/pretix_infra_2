@@ -34,7 +34,7 @@ To use this role, create a playbook that includes the role. Here is an example p
 ```yaml
 ---
 - name: Deploy of Grafana Loki using Docker containers
-  hosts: loki-server
+  hosts: loki_server
   become: true
   vars:
     loki_version: "3.5.1"
