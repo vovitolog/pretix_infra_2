@@ -1,11 +1,10 @@
-data "yandex_compute_image" "ubuntu" {
+data "yandex_compute_image" "monitoring" {
   family = var.mon_vm_os_family
 }
-
 resource "yandex_compute_instance" "monitoring" {
   name        = "monitoring-instance"
   platform_id = var.mon_vm_platform
-  zone        = var.default_zone
+  zone        = var.mon_zone
 
   resources {
     cores         = var.mon_vm_cores
@@ -16,15 +15,16 @@ resource "yandex_compute_instance" "monitoring" {
   boot_disk {
     auto_delete = true
     initialize_params {
-      image_id = data.yandex_compute_image.ubuntu.id
+      image_id = data.yandex_compute_image.monitoring.id
       size     = var.mon_vm_disk_size
       type     = var.mon_vm_disk_type
     }
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.d-subnet.id
-    nat       = true
+    subnet_id         = yandex_vpc_subnet.monitoring.id
+    nat               = true
+    security_group_ids = [yandex_vpc_security_group.mon_default_sg.id]
   }
 
   scheduling_policy {
@@ -32,11 +32,11 @@ resource "yandex_compute_instance" "monitoring" {
   }
 
   metadata = {
-    user-data = templatefile("${path.module}/user-data.yaml.tftpl", {
+    runner-token = var.gitlab_runner_token
+    user-data    = templatefile("${path.module}/user-data.yaml.tftpl", {
       users    = var.users
       services = var.service_users
     })
-    runner-token = var.gitlab_runner_token
   }
 
   provisioner "local-exec" {

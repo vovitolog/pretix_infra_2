@@ -39,3 +39,8 @@ variable "mon_vm_cores" {
   default     = 2
   description = "Number of CPU cores vm will have"
 }
+variable "gitlab_runner_token" {
+  type        = string
+  description = "Token for registering GitLab runner"
+  sensitive   = true
+}
