@@ -1,2 +1,13 @@
 ---
-# defaults file for nginx
+image: "nginx:1.27.5-alpine"
+container_name: "nginx_webserver_1"
+ports:
+  - "80:80"
+  - "443:443"
+network: pretix-network
+restart_policy: unless-stopped
+volume: pipeline_static_data
+list_of_urls:
+  - url: mvp.pretix.devops-factory.com
+    proxy: pretix-web
+
