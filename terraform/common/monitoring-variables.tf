@@ -39,8 +39,8 @@ variable "mon_vm_cores" {
   default     = 2
   description = "Number of CPU cores vm will have"
 }
-variable "gitlab_runner_token" {
+variable "mon_dns_name" {
   type        = string
-  description = "Token for registering GitLab runner"
-  sensitive   = true
+  default     = "monitoring.pretix.devops-factory.com"
+  description = "DNS name for monitoring instance"
 }
