@@ -5,7 +5,7 @@ datasources:
     type: loki
     access: proxy
     orgId: 1
-    url: http://{{ loki_hostname }}:3100
+    url: http://{{ loki_hostname }}:{{ loki_http_port }}
     basicAuth: false
     isDefault: false
     version: 1
@@ -14,7 +14,7 @@ datasources:
   - name: Prometheus
     type: prometheus
     orgId: 1
-    url: http://{{ prometheus_hostname }}:9090
+    url: http://{{ prometheus_hostname }}:{{ prometheus_http_port }}
     basicAuth: false
     isDefault: true
     version: 1

@@ -1,5 +1,10 @@
 ---
 grafana_version: 12.0.1-ubuntu
 grafana_path: /opt/grafana
+grafana_http_port: "3000"
+grafana_docker_network: "grafana-net"
+grafana_admin_user: "admin"
 loki_hostname: loki
+loki_http_port: "3100"
 prometheus_hostname: prometheus
+prometheus_http_port: "9090"

@@ -16,25 +16,33 @@
   template:
     src: grafana.ini.j2
     dest: "{{ grafana_path }}/etc/grafana.ini"
+    mode: '0644'
   notify: Restart Grafana
 
 - name: Copy Grafana provisioning file from template
   template:
     src: ds.yaml.j2
     dest: "{{ grafana_path }}/etc/provisioning/datasources/ds.yaml"
+    mode: '0644'
   notify: Restart Grafana
+
+- name: Create Docker network
+  community.docker.docker_network:
+    name: "{{ grafana_docker_network }}"
+    state: present
 
 - name: Run Grafana container
   docker_container:
     name: grafana
     image: "grafana/grafana-oss:{{ grafana_version }}"
-    # ports:
-    #   - "3000:3000"
+    ports:
+      - "{{ grafana_http_port }}:3000"
     volumes:
       - "{{ grafana_path }}/etc:/etc/grafana"
       - "{{ grafana_path }}/data:/var/lib/grafana"
+    networks:
+      - name: "{{ grafana_docker_network }}"
     restart_policy: unless-stopped
-    network_mode: host
     state: started
 
 - name: Ensure Grafana is running

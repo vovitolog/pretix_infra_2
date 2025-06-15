@@ -13,13 +13,17 @@ This Ansible role automates the deployment of Grafana using Docker containers.
 ## Role Variables
 
 The role defines several variables that can be overridden to customize the deployment process. These variables are defined in `defaults/main.yml`:
-
-- `grafana_version`: The version of Grafana to deploy. Default is `"12.0.1-ubuntu"`.
-- `grafana_path`: The directory path where Grafana will store its data and configuration. Default is `"/opt/grafana"`.
-- `loki_hostname`: Hostname for Loki datasource. Default is `"loki"`.
-- `prometheus_hostname`: Hostname for Prometheus datasource. Default is `"prometheus"`.
-- `grafana_admin_user`: Grafana admin username. Default is not set.
-- `grafana_admin_password`: Grafana admin password. Default is not set.
+   Variable | Description | Default Value |
+ |----------|-------------|---------------|
+ | `grafana_version` | The version of Grafana to deploy. | `"12.0.1-ubuntu"` |
+ | `grafana_path` | The directory path where Grafana will store its data and configuration. | `"/opt/grafana"` |
+ | `grafana_http_port` | HTTP port for Grafana. | `"3000"` |
+ | `grafana_docker_network` | Docker network for Grafana. | `"grafana-net"` |
+ | `grafana_admin_user` | Grafana admin username. | `"admin"` |
+ | `loki_hostname` | Hostname for Loki datasource. | `"loki"` |
+ | `loki_http_port` | HTTP port for Loki. | `"3100"` |
+ | `prometheus_hostname` | Hostname for Prometheus datasource. | `"prometheus"` |
+ | `prometheus_http_port` | HTTP port for Prometheus. | `"9090"` |
 
 ## Dependencies
 
@@ -41,13 +45,15 @@ To use this role, create a playbook that includes the role. Here is an example p
   hosts: grafana_server
   become: true
   vars:
-    grafana_version: "12.0.1-ubuntu"
-    grafana_path: "/opt/grafana"
+    grafana_version: 12.0.1-ubuntu
+    grafana_path: /opt/grafana
+    grafana_http_port: "3000"
+    grafana_docker_network: "grafana-net"
+    grafana_admin_user: "admin"
     loki_hostname: loki
+    loki_http_port: "3100"
     prometheus_hostname: prometheus
-    grafana_admin_user: admin
-    grafana_admin_password: admin
-
+    prometheus_http_port: "9090"
   roles:
     - grafana
 
