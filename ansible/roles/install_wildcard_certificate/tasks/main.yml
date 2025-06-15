@@ -1,0 +1,110 @@
+---
+- name: "Check cert_id"
+  ansible.builtin.assert:
+    that:
+      - yc_cert_id != ""
+    fail_msg: "Please locate  yc_cert_id"
+    success_msg: "yc_cert_id found"
+
+- name: "Install dependencies"
+  become: yes
+  ansible.builtin.apt:
+    name:
+      - python3-jwt
+      - python3-cryptography
+    state: present
+  when: ansible_facts['pkg_mgr'] == 'apt'
+
+- name: "Load service accout key"
+  ansible.builtin.set_fact:
+    yc_sa_key: "{{ lookup('file', yc_sa_key_file) | from_json }}"
+  no_log: true
+
+- name: "Create tmp key file"
+  ansible.builtin.copy:
+    dest: "/tmp/sa_key.json"
+    content: "{{ yc_sa_key | to_json }}"
+    mode: "0600"
+  no_log: true
+  register: key_file
+  changed_when: false
+
+- name: "Generate JWT token"
+  ansible.builtin.command: |
+    python3 -c '
+    import jwt, time, json, sys
+    with open("/tmp/sa_key.json") as f:
+        key_data = json.load(f)
+    
+    # Очистка приватного ключа от лишних строк
+    private_key = key_data["private_key"]
+    if "PLEASE DO NOT REMOVE" in private_key:
+        private_key = "\n".join(private_key.split("\n")[1:])
+    
+    print(jwt.encode(
+        {
+            "iss": key_data["service_account_id"],
+            "aud": "{{ yc_iam_api_url }}",
+            "iat": int(time.time()),
+            "exp": int(time.time()) + {{ token_lifetime }},
+            "kid": key_data["id"]
+        },
+        private_key,
+        algorithm="PS256",
+        headers={"alg": "PS256", "typ": "JWT", "kid": key_data["id"]}
+    ))'
+  register: jwt_token
+  changed_when: false
+  no_log: true
+
+- name: "Remove tmp key file"
+  ansible.builtin.file:
+    path: "/tmp/sa_key.json"
+    state: absent
+
+- name: "Get IAM tocken"
+  ansible.builtin.uri:
+    url: "{{ yc_iam_api_url }}"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+    body:
+      jwt: "{{ jwt_token.stdout }}"
+    body_format: json
+    return_content: yes
+  register: iam_token
+  no_log: true
+
+- name: "Download certificate"
+  ansible.builtin.uri:
+    url: "{{ yc_cm_api_url }}/{{ yc_cert_id }}:getContent"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ iam_token.json.iamToken }}"
+    return_content: yes
+  register: cert_data
+  no_log: true
+
+- name: "Create cert dir"
+  ansible.builtin.file:
+    path: "{{ cert_dest_path | dirname }}"
+    state: directory
+    mode: "0755"
+
+- name: "Create folder for private keys"
+  ansible.builtin.file:
+    path: "{{ key_dest_path | dirname }}"
+    state: directory
+    mode: "0700"
+
+- name: "Saving certificate"
+  ansible.builtin.copy:
+    content: "{{ cert_data.json.certificateChain | join('\n') }}"
+    dest: "{{ cert_dest_path }}"
+    mode: "0644"
+
+- name: "Save private key"
+  ansible.builtin.copy:
+    content: "{{ cert_data.json.privateKey }}"
+    dest: "{{ key_dest_path }}"
+    mode: "0600"

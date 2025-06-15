@@ -9,16 +9,16 @@
     msg: "Docker is not installed. Please install Docker first."
   when: docker_check.rc != 0
 
-- name: Check if user is in docker group
-  ansible.builtin.shell: "id -nG | grep -qw docker"
-  register: docker_group_check
-  changed_when: false
-  ignore_errors: yes
+    #- name: Check if user is in docker group
+    # ansible.builtin.shell: "id -nG | grep -qw docker"
+    # register: docker_group_check
+    # changed_when: false
+    # ignore_errors: yes
 
-- name: Fail if user is not in docker group
-  ansible.builtin.fail:
-    msg: "Current user is not in 'docker' group. Please add user to 'docker' group and reload session."
-  when: docker_group_check.rc != 0
+      #- name: Fail if user is not in docker group
+      # ansible.builtin.fail:
+      # msg: "Current user is not in 'docker' group. Please add user to 'docker' group and reload session."
+      # when: docker_group_check.rc != 0
 
 - name: Log in to GitLab Docker registry
   community.docker.docker_login:

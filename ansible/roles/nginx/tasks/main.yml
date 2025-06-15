@@ -5,10 +5,22 @@
   failed_when: docker_info is failed
   changed_when: false
 
+- name: "Ensure directory for Nginx configs exists"
+  file:
+    path: "{{ playbook_dir }}/nginx/conf"
+    state: directory
+    mode: u=rwx,g=rwx,o=rx
+
+- name: "Ensure directory for certs exists"
+  file:
+    path: "{{ playbook_dir }}/nginx/ssl/live"
+    state: directory
+    mode: u=rwx,g=rwx,o=rx
+
 - name: "Copy Nginx configuration files"
   template:
     src: default.conf.j2
-    dest: "{{ item.url }}.conf"
+    dest: "{{ playbook_dir }}/nginx/conf/{{ item.url }}.conf"
     mode: u=rw,g=rw,o=r
   with_items: "{{ list_of_urls }}"
 
@@ -30,7 +42,9 @@
     networks:
       - name: "{{ network }}"
     volumes:
-      - nginx/conf/:/etc/nginx/conf.d/:ro
-      - nginx/certbot/conf/:/etc/nginx/ssl/:ro
+      - "{{ playbook_dir }}/nginx/conf:/etc/nginx/conf.d:rw"
+      - "{{ playbook_dir }}/nginx/ssl/live:/etc/nginx/ssl/live:ro"
       - "{{ volume }}:/pretix/src/pretix/static.dist"
     restart_policy: "{{ restart_policy }}"
+  
+  with_items: "{{ list_of_urls }}"
