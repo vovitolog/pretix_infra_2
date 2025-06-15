@@ -1,0 +1,37 @@
+---
+include_vars: vault.yml
+
+# Ansible
+ansible_ssh_extra_args: -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+ansible_python_interpreter: /usr/bin/python3
+# ansible_user: pipeline
+# ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
+
+# Yandex Cloud Lockbox
+yc_lockbox_secret_id_grafana_admin_password: "e6qehuuur2gkrbffbkra"
+
+# Grafana
+global_grafana_version: 12.0.1-ubuntu
+global_grafana_path: /opt/grafana
+global_grafana_http_port: "3001"
+global_grafana_docker_network: "monitoring"
+global_grafana_admin_user: "admin"
+# global_grafana_admin_password: "{{ vault_grafana_admin_password }}"
+
+# Loki
+global_loki_hostname: 192.168.1.201
+global_loki_http_port: "3100"
+global_loki_version: "3.5.1"
+global_loki_path: "/opt/loki"
+global_loki_docker_network: "monitoring"
+
+
+# Prometheus
+global_prometheus_hostname: prometheus
+global_prometheus_http_port: "9090"
+
+# Alloy
+global_alloy_version: "v1.9.1"
+global_alloy_path: "/opt/alloy"
+global_alloy_docker_network: "monitoring"
+global_alloy_http_port: "12345"

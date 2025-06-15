@@ -1,0 +1,62 @@
+---
+- name: Setup Grafana and Loki on monitoring server
+  hosts: monitoring
+  become: true
+  vars:
+    grafana_version: "{{ global_grafana_version }}"
+    grafana_path: "{{ global_grafana_path }}"
+    grafana_http_port: "{{ global_grafana_http_port }}"
+    grafana_docker_network: "{{ global_grafana_docker_network }}"
+    grafana_admin_user: "{{ global_grafana_admin_user }}"
+    grafana_admin_password: "{{ global_grafana_admin_password }}"
+
+    loki_hostname: "{{ global_loki_hostname }}"
+    loki_http_port: "{{ global_loki_http_port }}"
+    loki_version: "{{ global_loki_version }}"
+    loki_path: "{{ global_loki_path }}"
+    loki_docker_network: "{{ global_loki_docker_network }}"
+
+    prometheus_hostname: "{{ global_prometheus_hostname }}"
+    prometheus_http_port: "{{ global_prometheus_http_port }}"
+
+  tasks:
+    - name: Check YC_TOKEN environment variable
+      fail:
+        msg: "The YC_TOKEN environment variable is not set !!!"
+      when: lookup('env', 'YC_TOKEN') == ''
+
+    - name: Get Grafana admin password from Yandex Lockbox
+      uri:
+        url: "https://payload.lockbox.api.cloud.yandex.net/lockbox/v1/secrets/{{ yc_lockbox_secret_id_grafana_admin_password }}/payload"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ lookup('env', 'YC_TOKEN') }}"
+        return_content: yes
+      register: lockbox_grafana
+      no_log: true
+
+    - name: Set Grafana admin password fact
+      set_fact:
+        global_grafana_admin_password: "{{ (lockbox_grafana.json.entries | selectattr('key', 'equalto', 'admin') | first).textValue }}"
+      no_log: true
+
+    - name: Include Grafana role
+      include_role:
+        name: grafana
+      vars:
+        grafana_admin_password: "{{ global_grafana_admin_password }}"
+  roles:
+    - loki
+
+- name: Setup Alloy on all hosts
+  hosts: all
+  become: true
+  roles:
+    - role: alloy
+      vars:
+        alloy_version: "{{ global_alloy_version }}"
+        alloy_path: "{{ global_alloy_path }}"
+        alloy_docker_network: "{{ global_alloy_docker_network }}"
+        alloy_http_port: "{{ global_alloy_http_port }}"
+        loki_hostname: "{{ global_loki_hostname }}"
+        loki_http_port: "{{ global_loki_http_port }}"
