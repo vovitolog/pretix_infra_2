@@ -2,10 +2,6 @@ data "yandex_compute_image" "monitoring" {
   family = var.mon_vm_os_family
 }
 
-data "yandex_dns_zone" "internal_zone" {
-  name = "pretix"
-}
-
 resource "yandex_compute_instance" "monitoring" {
   name        = "monitoring-instance"
   platform_id = var.mon_vm_platform
@@ -34,7 +30,11 @@ resources {
       yandex_vpc_security_group.mon_default_sg.id,
       yandex_vpc_security_group.internet_allowed.id
     ]
-    ip_address = cidrhost(var.mon_subnet_cidr, 6)
+    ip_address = local.mon_host
+    dns_record {
+      fqdn = "${var.proxy_dns_name}."
+      ttl  = 300
+    }
   }
 
   scheduling_policy {
@@ -42,7 +42,7 @@ resources {
   }
 
   metadata = {
-    user-data = templatefile("${path.module}/mon.user-data.yaml.tftpl", {
+    user-data = templatefile("${path.module}/mon-user-data.yaml.tftpl", {
       users    = var.users
       services = var.service_users
     })
@@ -55,12 +55,4 @@ resources {
       ssh-keygen -f ~/.ssh/known_hosts -R ${self.network_interface[0].nat_ip_address}
     EOT
   }
-}
-
-resource "yandex_dns_recordset" "monitoring" {
-  zone_id = data.yandex_dns_zone.internal_zone.id
-  name    = "${var.mon_dns_name}.${data.yandex_dns_zone.internal_zone.name}."
-  type    = "A"
-  ttl     = 600
-  data    = [yandex_compute_instance.monitoring.network_interface[0].ip_address]
 }
