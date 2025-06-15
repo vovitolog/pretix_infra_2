@@ -1,6 +1,6 @@
 ---
 - name: Test Docker installation role
-  hosts: all
+  hosts: localhost
   become: true
   roles:
     - docker
