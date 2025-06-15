@@ -1,0 +1,5 @@
+---
+list_of_urls:
+  - url: "dev.pretix.devops-factory.com"
+    proxy: "pretix-web"
+

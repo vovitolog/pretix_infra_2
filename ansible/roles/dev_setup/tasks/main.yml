@@ -1,0 +1,30 @@
+---
+- name: Install and configure PostgreSQL
+  import_role:
+    name: postgres
+  tags:
+    - postgres
+
+- name: Install and configure Redis
+  import_role:
+    name: redis
+  tags:
+    - redis
+
+- name: Install and configure RabbitMQ
+  import_role:
+    name: rabbitmq-docker
+  tags:
+    - rabbitmq
+
+- name: Install wildcard SSL certificate
+  import_role:
+    name: install_wildcard_certificate
+  tags:
+    - ssl
+
+- name: Install and configure Nginx
+  import_role:
+    name: nginx
+  tags:
+    - nginx

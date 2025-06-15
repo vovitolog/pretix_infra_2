@@ -1,0 +1,7 @@
+---
+- name: Deploy Infrastructure to Dev
+  hosts: dev-standalone
+  become: true
+
+  roles:
+    - dev_setup

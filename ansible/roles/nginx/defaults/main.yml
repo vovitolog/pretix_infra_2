@@ -8,6 +8,9 @@ network: pretix-network
 restart_policy: unless-stopped
 volume: pipeline_static_data
 list_of_urls:
-  - url: mvp.pretix.devops-factory.com
-    proxy: pretix-web
-
+  #  - url: mvp.pretix.devops-factory.com
+  #  proxy: pretix-web
+  # - url: dev.pretix.devops-factory.com
+  #  proxy: pretix-web
+  #- url: test.pretix.devops-factory.com
+  #  proxy: pretix-web

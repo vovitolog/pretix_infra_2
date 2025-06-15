@@ -1,0 +1,18 @@
+---
+#yc_cert_id: "fpqn8oqmi8r9435q0j0m"
+
+# wildcard certificate id
+yc_cert_id: "fpqnecnvkbijm1tmp8fj"
+
+# service account key  path
+yc_sa_key_file: "{{ role_path }}/vault/certbot-key.json"
+
+# api urls
+yc_iam_api_url: "https://iam.api.cloud.yandex.net/iam/v1/tokens"
+yc_cm_api_url: "https://data.certificate-manager.api.cloud.yandex.net/certificate-manager/v1/certificates"
+
+token_lifetime: 3600
+
+# certs paths  
+cert_dest_path: "{{ playbook_dir }}/nginx/ssl/live/pretix.devops-factory.com/fullchain.pem"
+key_dest_path: "{{ playbook_dir }}/nginx/ssl/live/pretix.devops-factory.com/privkey.pem" 
