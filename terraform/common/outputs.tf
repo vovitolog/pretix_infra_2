@@ -21,9 +21,10 @@ output "prod_net" {
 
 output "mon_net" {
   value = {
-    cidr = var.mon_subnet_cidr
-    zone = var.mon_zone
-    # private_ip = try()
+    cidr       = var.mon_subnet_cidr
+    zone       = var.mon_zone
+    private_ip = local.mon_host
+    public_ip  = try(yandex_compute_instance.reverse_proxy.network_interface[0].nat_ip_address, null)
   }
 }
 
