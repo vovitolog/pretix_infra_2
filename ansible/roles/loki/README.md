@@ -13,9 +13,12 @@ This Ansible role automates the deployment of Grafana Loki using Docker containe
 ## Role Variables
 
 The role defines several variables that can be overridden to customize the deployment process. These variables are defined in `defaults/main.yml`:
-
-- `loki_version`: The version of Loki to deploy. Default is `"3.5.1"`.
-- `loki_path`: The directory path where Loki will store its data and configuration. Default is `"/opt/loki"`.
+   Variable | Description | Default Value |
+ |----------|-------------|---------------|
+ | `loki_version` | The version of Loki to deploy. | `"3.5.1"` |
+ | `loki_path` | The directory path where Loki will store its data and configuration. | `"/opt/loki"` |
+ | `loki_http_port` | HTTP port for Loki. | `"3100"` |
+ | `loki_docker_network` | Docker network for Loki. | `"loki-net"` |
 
 ## Dependencies
 
@@ -39,6 +42,8 @@ To use this role, create a playbook that includes the role. Here is an example p
   vars:
     loki_version: "3.5.1"
     loki_path: "/opt/loki"
+    loki_http_port: "3100"
+    loki_docker_network: "loki-net"
   roles:
     - loki
 

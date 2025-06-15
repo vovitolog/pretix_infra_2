@@ -17,21 +17,29 @@
   template:
     src: files/loki-config.yml
     dest: "{{ loki_path }}/etc/local-config.yaml"
+    mode: '0644'
   notify:
     - Restart Loki
+
+- name: Create Docker network
+  community.docker.docker_network:
+    name: "{{ loki_docker_network }}"
+    state: present
 
 - name: Run Loki Docker container
   docker_container:
     name: loki
     image: "grafana/loki:{{ loki_version }}"
-    state: started
-    restart_policy: unless-stopped
     ports:
-      - "3100:3100"
+      - "{{ loki_http_port }}:3100"
     volumes:
       - "{{ loki_path }}/data:/loki"
       - "{{ loki_path }}/etc/local-config.yaml:/etc/loki/local-config.yaml"
     command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - name: "{{ loki_docker_network }}"
+    restart_policy: unless-stopped
+    state: started
 
 - name: Ensure Loki is running
   docker_container_info:
