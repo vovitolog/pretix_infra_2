@@ -64,7 +64,7 @@ loki.source.docker "docker" {
 
 loki.write "default" {
 	endpoint {
-		url = "http://{{ loki_hostname }}:3100/loki/api/v1/push"
+		url = "http://{{ loki_hostname }}:{{ loki_http_port }}/loki/api/v1/push"
 	}
 	external_labels = {}
 }

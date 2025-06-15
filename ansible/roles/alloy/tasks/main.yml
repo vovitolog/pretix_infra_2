@@ -9,14 +9,20 @@
   template:
     src: config.alloy.j2
     dest: "{{ alloy_path }}/etc/config.alloy"
+    mode: '0644'
   notify: Restart Alloy
+
+- name: Create Docker network
+  community.docker.docker_network:
+    name: "{{ alloy_docker_network }}"
+    state: present
 
 - name: Run Alloy container
   docker_container:
     name: alloy
     image: "grafana/alloy:{{ alloy_version }}"
-    # ports:
-    #   - "12345:12345"
+    ports:
+      - "{{ alloy_http_port }}:12345"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/var/log:ro
@@ -27,10 +33,11 @@
       - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
+    networks:
+      - name: "{{ alloy_docker_network }}"
     restart_policy: unless-stopped
-    network_mode: host
-    hostname: "{{ ansible_hostname }}"
     state: started
+    hostname: "{{ ansible_hostname }}"
 
 - name: Ensure Alloy is running
   docker_container_info:

@@ -3,9 +3,11 @@
   hosts: localhost
   become: true
   vars:
-    grafana_version: "v1.9.1 "
-    grafana_path: "/opt/alloy"
-    loki_hostname: loki-server
-
+    alloy_version: "v1.9.1"
+    alloy_path: "/opt/alloy"
+    alloy_docker_network: "alloy-net"
+    alloy_http_port: "12345"
+    loki_hostname: loki
+    loki_http_port: "3100"
   roles:
     - alloy

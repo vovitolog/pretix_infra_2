@@ -13,10 +13,14 @@ This Ansible role is designed to set up and configure Alloy, a time series datab
 ## Role Variables
 
 The role defines several variables that can be overridden to customize the deployment process. These variables are defined in `defaults/main.yml`:
-
-- `alloy_version`: The version of Alloy to deploy. Default is `"v1.9.1 "`.
-- `grafana_path`: The directory path where Alloy will store its data and configuration. Default is `"/opt/alloy"`.
-- `loki_hostname`: Hostname for Loki datasource. Default is `"loki"`.
+   Variable | Description | Default Value |
+ |----------|-------------|---------------|
+ | `alloy_version` | The version of Alloy to deploy. | `"v1.9.1"` |
+ | `alloy_path` | The directory path where Alloy will store its data and configuration. | `"/opt/alloy"` |
+ | `alloy_docker_network` | Docker network for Alloy. | `"alloy-net"` |
+ | `alloy_http_port` | HTTP port for Alloy. | `"12345"` |
+ | `loki_hostname` | Hostname for Loki datasource. | `"loki"` |
+ | `loki_http_port` | HTTP port for Loki. | `"3100"` |
 
 ## Dependencies
 
@@ -40,8 +44,10 @@ To use this role, create a playbook that includes the role. Here is an example p
   vars:
     alloy_version: "v1.9.1"
     alloy_path: "/opt/alloy"
+    alloy_docker_network: "alloy-net"
+    alloy_http_port: "12345"
     loki_hostname: loki
-
+    loki_http_port: "3100"
   roles:
     - alloy
 
