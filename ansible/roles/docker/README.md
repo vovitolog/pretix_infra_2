@@ -12,9 +12,10 @@ This Ansible role automates the installation of Docker on Ubuntu 24.04 systems. 
 ## Role Variables
 
 The role defines several variables that can be overridden to customize the installation process. These variables are defined in `defaults/main.yml`:
-
-- `apt_https_packages`: List of packages required to allow apt to use a repository over HTTPS.
-- `docker_packages`: List of Docker packages to install.
+   Variable | Description | Default Values |
+ |---------|-------------|----------------|
+ | `apt_https_packages` | List of packages required to allow apt to use a repository over HTTPS. | ```yaml<br>- apt-transport-https<br>- ca-certificates<br>- curl<br>- software-properties-common<br>- gnupg-agent<br>``` |
+ | `docker_packages` | List of Docker packages to install. | ```yaml<br>- docker-ce<br>- docker-ce-cli<br>- containerd.io<br>- docker-compose-plugin<br>``` |
 
 ## Dependencies
 
