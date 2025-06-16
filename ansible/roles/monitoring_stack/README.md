@@ -8,7 +8,6 @@ This Ansible role deploys a complete monitoring stack with Prometheus, Alertmana
 - **Alertmanager** - Alert routing and notification management
 - **Grafana** - Metrics visualization and dashboards
 - **Blackbox Exporter** - HTTP/HTTPS endpoint monitoring
-- **Node Exporter** - Host system metrics collection
 
 ## Features
 
@@ -108,7 +107,6 @@ After deployment:
 - Prometheus: `http://<host>:9090`
 - Alertmanager: `http://<host>:9093` 
 - Grafana: `http://<host>:3000` (admin/your_password)
-- Node Exporter: `http://<host>:9100/metrics`
 - Blackbox Exporter: `http://<host>:9115`
 
 ## Customization
