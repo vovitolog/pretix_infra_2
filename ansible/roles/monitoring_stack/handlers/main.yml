@@ -1,2 +1,20 @@
 ---
-# handlers file for monitoring_stack
+- name: Restart Prometheus
+  community.docker.docker_container:
+    name: prometheus
+    state: started
+    restart: true
+
+- name: Restart Alertmanager
+  community.docker.docker_container:
+    name: alertmanager
+    state: started
+    restart: true
+
+- name: Restart Docker Compose Stack
+  community.docker.docker_compose:
+    project_src: /home/pipeline/monitoring
+    files:
+      - docker-compose.yml
+    restarted: true
+  register: compose_restart_result

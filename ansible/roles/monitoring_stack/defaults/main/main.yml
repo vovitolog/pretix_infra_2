@@ -1,3 +1,11 @@
 ---
-alerts_send_telegram_chat_id: "-393421237"
+# Network configuration
+container_network: monitoring_network
 
+# Telegram configuration (non-sensitive)
+alerts_send_telegram_chat_id: -1002704947674 
+telegram_infrastructure_thread_id: 2    
+telegram_network_thread_id: 4           
+telegram_application_thread_id: 6          
+telegram_database_thread_id: 8           
+telegram_security_thread_id: 10              
