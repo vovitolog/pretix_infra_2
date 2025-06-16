@@ -83,7 +83,14 @@
   notify: Restart Docker Compose Stack
 
 - name: Ensure Docker Compose stack is up
-  ansible.builtin.command:
-    cmd: docker-compose -f /home/pipeline/monitoring/docker-compose.yml up -d
-    chdir: /home/pipeline/monitoring
-  changed_when: true
+  community.docker.docker_compose:
+    project_src: /home/pipeline/monitoring
+    files:
+      - docker-compose.yml
+    state: present
+    recreate: smart
+  register: monitoring_compose_result
+
+- name: Debug Docker Compose result
+  ansible.builtin.debug:
+    var: monitoring_compose_result
