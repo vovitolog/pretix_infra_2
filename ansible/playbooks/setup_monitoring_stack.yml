@@ -1,44 +1,10 @@
----
-- name: Deploy monitoring stack
-  hosts: monitoring
+- hosts: monitoring
+  become: true
   roles:
     - role: monitoring_stack
       vars:
-        # Network configuration for Docker containers
-        # Defines the Docker network used by the monitoring stack
-        # container_network: "monitoring_network"
-
-        # Telegram configuration for alert notifications
-        
-        # Chat ID for sending alerts to a Telegram group or channel
-        # alerts_send_telegram_chat_id: 0
-
-        # Telegram thread IDs for categorized alert routing
-        
-        # Infrastructure-related alerts thread
-        # telegram_infrastructure_thread_id: 0
-        
-        # Network-related alerts thread
-        # telegram_network_thread_id: 0
-        
-        # Application-related alerts thread
-        # telegram_application_thread_id: 0
-        
-        # Database-related alerts thread
-        # telegram_database_thread_id: 0
-        
-        # Security-related alerts thread
-        # telegram_security_thread_id: 0
-
-        # Sensitive credentials (should be stored in defaults/main/secret.yml)
-        
-        # Telegram bot token for sending notifications
-        # telegram_bot_token: "***"
-        
-        # Grafana admin user password
-        # grafana_admin_password: "***"
-
-      # Additional notes for users:
-      # - All variables are pre-configured with sensible defaults in defaults/main.yml or defaults/secret.yml
-      # - Uncomment and modify variables only if customization is required
-      # - Ensure telegram_bot_token and grafana_admin_password are securely stored (e.g., in Ansible Vault)
+      #  By default, all variables are set correctly and do not require changes. You can change them if necessary
+      #  grafana_admin_password: "*****"  # Password for Grafana admin user
+      #  telegram_bot_token: "*****"      # Telegram bot token for Alertmanager notifications
+      #  telegram_chat_id: "-393421237"   # Telegram chat ID for notifications
+      #  grafana_host: "grafana:3000"     # Host and port for Grafana probing

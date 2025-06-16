@@ -1,77 +1,15 @@
----
 global:
   resolve_timeout: 5m
 
-templates:
-  - '/etc/alertmanager/templates/*.tmpl'
-
 route:
-  receiver: 'default'
-  group_by: ['category', 'severity']
+  receiver: 'telegram'
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
-  routes:
-    - match:
-        category: Infrastructure
-      receiver: 'telegram_infrastructure'
-    - match:
-        category: Network
-      receiver: 'telegram_network'
-    - match:
-        category: Application
-      receiver: 'telegram_application'
-    - match:
-        category: Database
-      receiver: 'telegram_database'
-    - match:
-        category: Security
-      receiver: 'telegram_security'
 
 receivers:
-  - name: 'default'
-    telegram_configs:
-      - bot_token: "{{ telegram_bot_token }}"
-        chat_id: {{ alerts_send_telegram_chat_id | int }}
-        send_resolved: true
-        message: {% raw %}'{{ template "telegram.default" . }}'{% endraw %}
-
-  - name: 'telegram_infrastructure'
-    telegram_configs:
-      - bot_token: "{{ telegram_bot_token }}"
-        chat_id: {{ alerts_send_telegram_chat_id | int }}
-        message_thread_id: {{ telegram_infrastructure_thread_id | int }}
-        send_resolved: true
-        message: {% raw %}'{{ template "telegram.default" . }}'{% endraw %}
-
-  - name: 'telegram_network'
-    telegram_configs:
-      - bot_token: "{{ telegram_bot_token }}"
-        chat_id: {{ alerts_send_telegram_chat_id | int }}
-        message_thread_id: {{ telegram_network_thread_id | int }}
-        send_resolved: true
-        message: {% raw %}'{{ template "telegram.default" . }}'{% endraw %}
-
-  - name: 'telegram_application'
-    telegram_configs:
-      - bot_token: "{{ telegram_bot_token }}"
-        chat_id: {{ alerts_send_telegram_chat_id | int }}
-        message_thread_id: {{ telegram_application_thread_id | int }}
-        send_resolved: true
-        message: {% raw %}'{{ template "telegram.default" . }}'{% endraw %}
-
-  - name: 'telegram_database'
-    telegram_configs:
-      - bot_token: "{{ telegram_bot_token }}"
-        chat_id: {{ alerts_send_telegram_chat_id | int }}
-        message_thread_id: {{ telegram_database_thread_id | int }}
-        send_resolved: true
-        message: {% raw %}'{{ template "telegram.default" . }}'{% endraw %}
-
-  - name: 'telegram_security'
-    telegram_configs:
-      - bot_token: "{{ telegram_bot_token }}"
-        chat_id: {{ alerts_send_telegram_chat_id | int }}
-        message_thread_id: {{ telegram_security_thread_id | int }}
-        send_resolved: true
-        message: {% raw %}'{{ template "telegram.default" . }}'{% endraw %}
+- name: 'telegram'
+  telegram_configs:
+  - bot_token: "{{ telegram_bot_token }}"
+    chat_id: {{ alerts_send_telegram_chat_id | int }}
+    send_resolved: true

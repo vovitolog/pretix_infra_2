@@ -1,156 +1,57 @@
-# Monitoring Stack Deployment
+# Monitoring Stack Role
 
-This Ansible role deploys a complete monitoring stack with Prometheus, Alertmanager, Grafana, and supporting exporters using Docker containers. The stack is pre-configured with Telegram notifications and sample alert rules.
-
-## Stack Components
-
-- **Prometheus** - Metrics collection and alert evaluation
-- **Alertmanager** - Alert routing and notification management
-- **Grafana** - Metrics visualization and dashboards
-- **Blackbox Exporter** - HTTP/HTTPS endpoint monitoring
-- **Node Exporter** - Host system metrics collection
-
-## Features
-
-- Pre-configured Telegram notifications with thread support
-- Sample alert rules for service monitoring
-- Persistent storage for all components
-- Automatic restart policies
-- Role-based alert routing (Infrastructure, Network, Application, etc.)
+This Ansible role deploys a monitoring stack consisting of Prometheus, Alertmanager, Grafana, and Blackbox Exporter using Docker Compose. It configures Prometheus to monitor with HTTP probing for Grafana availability. Alertmanager is set up to send notifications to Telegram, and a sample alert rule is included to detect Grafana downtime.
 
 ## Requirements
 
-- Ansible 2.9+
-- Docker and Docker Compose
-- Linux host (tested on Ubuntu 20.04/22.04)
-- Python 3.x
-- Telegram bot token and chat ID
+- Ansible 2.9 or higher.
+- Docker and Docker Compose installed on the target host (automatically handled by the role).
+- Ubuntu-based system (role uses `apt` for package installation).
+- Access to Docker Hub for pulling the latest images of `prom/prometheus`, `prom/alertmanager`, `grafana/grafana`, and `prom/blackbox-exporter`.
+- A valid Telegram bot token and chat ID for Alertmanager notifications.
 
-## Installation
+## Role Variables
 
-1. Clone the repository:
-```
-git clone <your-repo-url>
-cd ansible-monitoring-stack
-```
+Variables are defined in `defaults/main.yml`:
 
-2. Configure variables in `playbooks/setup_monitoring_stack.yml`:
-```
-- name: Deploy monitoring stack
-  hosts: monitoring
+- `grafana_admin_password`: Password for Grafana admin user (default: `*****`). **Change to a secure password in production.**
+- `telegram_bot_token`: Telegram bot token for Alertmanager notifications (default: `*****`). Obtain from @BotFather.
+- `alerts_send_telegram_chat_id`: Telegram chat ID for notifications (default: `-393421237`). Must be a number, not a string. Obtain from @GetIDsBot.
+- `grafana_host`: Host and port for Grafana probing (default: `grafana:3000`). Used by Blackbox Exporter for HTTP checks.
+
+## Dependencies
+
+None. This role is self-contained and does not depend on other Ansible roles.
+
+## Example Playbook
+
+```yaml
+- hosts: monitoring_servers
   roles:
-    roles:
     - role: monitoring_stack
       vars:
-        # Network configuration for Docker containers
-        # Defines the Docker network used by the monitoring stack
-        # container_network: "monitoring_network"
+      #  By default, all variables are set correctly and do not require changes. You can change them if necessary
+      #  grafana_admin_password: "*****"  # Password for Grafana admin user
+      #  telegram_bot_token: "*****"      # Telegram bot token for Alertmanager notifications
+      #  telegram_chat_id: "-393421237"   # Telegram chat ID for notifications
+      #  grafana_host: "grafana:3000"     # Host and port for Grafana probing
+```
+Variables can also be changed in the file: `roles/monitoring_stack/defaults/main`:
 
-        # Telegram configuration for alert notifications
-        
-        # Chat ID for sending alerts to a Telegram group or channel
-        # alerts_send_telegram_chat_id: 0
-
-        # Telegram thread IDs for categorized alert routing
-        
-        # Infrastructure-related alerts thread
-        # telegram_infrastructure_thread_id: 0
-        
-        # Network-related alerts thread
-        # telegram_network_thread_id: 0
-        
-        # Application-related alerts thread
-        # telegram_application_thread_id: 0
-        
-        # Database-related alerts thread
-        # telegram_database_thread_id: 0
-        
-        # Security-related alerts thread
-        # telegram_security_thread_id: 0
-
-        # Sensitive credentials (should be stored in defaults/main/secret.yml)
-        
-        # Telegram bot token for sending notifications
-        # telegram_bot_token: "***"
-        
-        # Grafana admin user password
-        # grafana_admin_password: "***"
+```
+---
+grafana_admin_password: "PASSWORD"
+telegram_bot_token: "BOT_TOKEN"
+telegram_chat_id: "CHAT_ID"
 ```
 
-3. Run the playbook:
+Save this as `playbook.yml` and run with:
+```bash
+ansible-playbook playbook.yml
 ```
-ansible-playbook -i inventory site.yml
-```
-
-## Configuration
-
-### Alertmanager
-- Configuration: `templates/alertmanager.yml.j2`
-- Telegram templates: `files/telegram.tmpl`
-- Routes alerts by category to different Telegram threads
-
-### Prometheus
-- Main config: `files/prometheus.yml`
-- Alert rules: `files/rules.yml`
-- Monitors:
-  - Host metrics via Node Exporter
-  - HTTP endpoints via Blackbox
-  - All stack components
-
-### Grafana
-- Pre-configured with admin password
-- Persistent storage
-- Accessible on port 3000
-
-## Access URLs
 
 After deployment:
 - Prometheus: `http://<host>:9090`
-- Alertmanager: `http://<host>:9093` 
-- Grafana: `http://<host>:3000` (admin/your_password)
-- Node Exporter: `http://<host>:9100/metrics`
+- Alertmanager: `http://<host>:9093`
+- Grafana: `http://<host>:3000` (login: admin, password: as set in `grafana_admin_password`)
 - Blackbox Exporter: `http://<host>:9115`
-
-## Customization
-
-### Adding Alert Rules
-Edit `files/rules.yml` following Prometheus alerting rules syntax.
-
-Example:
-```
-groups:
-- name: example
-  rules:
-  - alert: ServiceDown
-    expr: up == 0
-    for: 1m
-    labels:
-      severity: critical
-    annotations:
-      summary: "Service {{ $labels.instance }} is down"
-```
-
-### Modifying Telegram Notifications
-Edit `files/telegram.tmpl` to change notification format. Uses Go template syntax.
-
-### Adding New Receivers
-Edit `templates/alertmanager.yml.j2` to add new notification channels.
-
-## Maintenance
-
-To restart all services:
-```
-docker-compose -f /home/pipeline/monitoring/docker-compose.yml restart
-```
-
-To view logs:
-```
-docker-compose -f /home/pipeline/monitoring/docker-compose.yml logs -f
-```
-
-## Troubleshooting
-
-Common issues:
-- **Docker permissions**: Ensure user is in docker group
-- **Template errors**: Check Alertmanager logs for template syntax issues
-- **Telegram notifications**: Verify bot token and chat ID in `defaults/secret.yml`
