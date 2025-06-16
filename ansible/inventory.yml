@@ -5,3 +5,20 @@ mvp:
       ansible_user: pipeline
       ansible_host: mvp.pretix.devops-factory.com
       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
+
+dev:
+  hosts:
+    dev-standalone:
+      ansible_user: pipeline
+      ansible_host: 10.130.0.21
+      ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
+      ansible_ssh_common_args: '-o ProxyJump=pipeline@158.160.110.141 -o ForwardAgent=yes'
+      
+
+monitoring:
+  hosts:
+    main-monitoring:
+      ansible_user: pipeline
+      ansible_host: monitoring.pretix.devops-factory.com
+      ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
+      ansible_ssh_common_args: '-o ProxyJump=pipeline@158.160.110.141 -o ForwardAgent=yes'

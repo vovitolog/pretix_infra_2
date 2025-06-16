@@ -4,8 +4,10 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - /opt/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - /opt/prometheus/rules.yml:/etc/prometheus/rules.yml
+      - /home/pipeline/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /home/pipeline/monitoring/prometheus/rules.yml:/etc/prometheus/rules.yml
+      - /home/pipeline/monitoring/prometheus/node_exporter_targets.yml:/etc/prometheus/node_exporter_targets.yml
+      - prometheus_data:/prometheus
     ports:
       - "9090:9090"
     networks:

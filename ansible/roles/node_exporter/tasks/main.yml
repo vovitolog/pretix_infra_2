@@ -1,2 +1,67 @@
 ---
-# tasks file for node_exporter
+- name: Check Docker installation
+  ansible.builtin.command: docker --version
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Fail if Docker is not installed
+  ansible.builtin.fail:
+    msg: "Docker is not installed. Please install Docker first."
+  when: docker_check.rc != 0
+
+- name: Check if user is in docker group
+  ansible.builtin.shell: "id -nG | grep -qw docker"
+  register: docker_group_check
+  changed_when: false
+  ignore_errors: yes
+
+- name: Fail if user is not in docker group
+  ansible.builtin.fail:
+    msg: "Current user is not in 'docker' group. Please add user to 'docker' group and reload session."
+  when: docker_group_check.rc != 0
+
+- name: Create node_exporter configuration directory
+  ansible.builtin.file:
+    path: "{{ node_exporter_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Run node_exporter container
+  community.docker.docker_container:
+    name: node_exporter
+    image: "prom/node-exporter:v{{ node_exporter_version }}"
+    state: started
+    restart_policy: unless-stopped
+    published_ports:
+      - "{{ node_exporter_port }}:9100"
+    volumes:
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/:/rootfs:ro"
+      - "{{ node_exporter_config_dir }}:/etc/node-exporter"
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+
+- name: Check for existing target
+  delegate_to: "{{ groups['monitoring'][0] }}"
+  run_once: true
+  ansible.builtin.find:
+    paths: /home/pipeline/monitoring/prometheus
+    patterns: prometheus.yml
+    contains: "      - targets: \\['{{ hostvars[inventory_hostname]['ansible_host'] }}:9100'\\]"
+  register: target_search
+
+- name: Add node_exporter target (if not exists)
+  delegate_to: "{{ groups['monitoring'][0] }}"
+  run_once: true
+  ansible.builtin.lineinfile:
+    path: /home/pipeline/monitoring/prometheus/prometheus.yml
+    insertafter: '^  - job_name: ''node_exporter''\n    static_configs:'
+    line: "      - targets: ['{{ hostvars[inventory_hostname]['ansible_host'] }}:9100']\n        labels:\n          instance: \"{{ inventory_hostname }}\"\n          host_type: \"{{ group_names | first }}\""
+    state: present
+  when: target_search.matched == 0
+  notify: reload prometheus

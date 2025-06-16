@@ -1,2 +1,7 @@
----
-# handlers file for node_exporter
+- name: reload prometheus
+  delegate_to: "{{ groups['monitoring'][0] }}"
+  run_once: true
+  community.docker.docker_container:
+    name: prometheus
+    state: started
+    restart: yes
