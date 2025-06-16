@@ -9,33 +9,41 @@ alerting:
             - alertmanager:9093
 
 rule_files:
-  - /home/pipeline/monitoring/prometheus/rules.yml
+  - /etc/prometheus/rules.yml
 
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+        labels:
+          instance: "prometheus"
   - job_name: 'alertmanager'
     static_configs:
       - targets: ['alertmanager:9093']
+        labels:
+          instance: "alertmanager"
   - job_name: 'grafana'
     metrics_path: /metrics
     static_configs:
       - targets: ['grafana:3000']
+        labels:
+          instance: "grafana"
   - job_name: 'blackbox'
     metrics_path: /probe
     params:
       module: [http_2xx]
     static_configs:
-      - targets:
-        - http://grafana:3000
+      - targets: ['http://grafana:3000']
+        labels:
+          instance: "grafana"
     relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
-      - target_label: __address__
-        replacement: blackbox-exporter:9115
+        - source_labels: [__address__]
+          target_label: __param_target
+        - source_labels: [__param_target]
+          target_label: instance
+        - target_label: __address__
+          replacement: blackbox-exporter:9115
+          
   - job_name: 'node_exporter'
     static_configs:
       - targets: ['node-exporter:9100']
