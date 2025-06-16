@@ -1,9 +1,9 @@
 ---
 - name: Deploy node exporter
-  hosts: mvp
+  hosts: dev
   roles:
     - role: node_exporter
       vars:
-        # Network configuration for Docker containers
-        # Defines the Docker network used by the monitoring stack
-        # container_network: "monitoring_network"
+        # node_exporter_version: "1.8.2"
+        # node_exporter_port: 9100
+        # node_exporter_config_dir: "/home/pipeline/monitoring/node_exporter"

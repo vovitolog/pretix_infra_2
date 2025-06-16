@@ -1,3 +1,4 @@
+---
 - name: Check Docker installation
   ansible.builtin.command: docker --version
   register: docker_check
@@ -44,3 +45,23 @@
       - "--path.sysfs=/host/sys"
       - "--path.rootfs=/rootfs"
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+
+- name: Check for existing target
+  delegate_to: "{{ groups['monitoring'][0] }}"
+  run_once: true
+  ansible.builtin.find:
+    paths: /home/pipeline/monitoring/prometheus
+    patterns: prometheus.yml
+    contains: "      - targets: \\['{{ hostvars[inventory_hostname]['ansible_host'] }}:9100'\\]"
+  register: target_search
+
+- name: Add node_exporter target (if not exists)
+  delegate_to: "{{ groups['monitoring'][0] }}"
+  run_once: true
+  ansible.builtin.lineinfile:
+    path: /home/pipeline/monitoring/prometheus/prometheus.yml
+    insertafter: '^  - job_name: ''node_exporter''\n    static_configs:'
+    line: "      - targets: ['{{ hostvars[inventory_hostname]['ansible_host'] }}:9100']\n        labels:\n          instance: \"{{ inventory_hostname }}\"\n          host_type: \"{{ group_names | first }}\""
+    state: present
+  when: target_search.matched == 0
+  notify: reload prometheus
