@@ -3,5 +3,5 @@
   run_once: true
   community.docker.docker_container:
     name: prometheus
-    state: started  # Используем 'started' вместо 'restarted'
-    restart: yes    # Это обеспечит перезагрузку контейнера
+    state: started
+    restart: yes
