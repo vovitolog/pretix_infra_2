@@ -1,6 +1,6 @@
 galaxy_info:
   author: Andrew Tyushevsk
-  description: Установка GitLab Runner в Docker
+  description: Installing GitLab Runner in Docker
   company: Pretix
 
   # If the issue tracker for your role is not on github, uncomment the

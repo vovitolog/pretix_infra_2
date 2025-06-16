@@ -1,0 +1,6 @@
+- hosts: mvp
+  become: true
+  collections:
+    - community.docker
+  roles:
+    - gitlab-runner-docker
