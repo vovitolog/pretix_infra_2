@@ -1,38 +1,104 @@
-Role Name
-=========
+# Node Exporter Deployment with Ansible
 
-A brief description of the role goes here.
+This Ansible playbook deploys Prometheus Node Exporter as a Docker container for collecting host system metrics.
 
-Requirements
-------------
+## Overview
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+The playbook performs the following:
+- Verifies Docker installation and permissions
+- Creates necessary directories for configuration
+- Deploys Node Exporter container with proper volume mounts and flags
 
-Role Variables
---------------
+## Features
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+- Uses official Prometheus Node Exporter Docker image
+- Properly mounts host filesystems for metrics collection
+- Persistent configuration directory
+- Automatic restart policy
+- Pre-configured collectors with excluded mount points
 
-Dependencies
-------------
+## Requirements
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+- Ansible 2.9+
+- Docker installed and running
+- User running the playbook must:
+  - Have Docker installed
+  - Be in the `docker` group
+  - Have permission to create directories
+- Linux host (tested on Ubuntu/Debian)
 
-Example Playbook
-----------------
+## Installation
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+1. Ensure Docker is installed and your user is in the docker group:
+```
+sudo apt-get install docker.io
+sudo usermod -aG docker $USER
+newgrp docker  # Reload group permissions
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+2. Clone the repository (if applicable) or create a playbook file with the provided content.
 
-License
--------
+3. Customize variables if needed in your playbook:
+```
+node_exporter_version: "1.8.2"  # Node Exporter version
+node_exporter_port: 9100       # Port to expose
+node_exporter_config_dir: "/home/pipeline/monitoring/node_exporter"  # Config directory
+```
 
-BSD
+4. Run the playbook:
+```
+ansible-playbook playbooks/node_exporter_deploy.yml
+```
 
-Author Information
-------------------
+## Configuration
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+### Volume Mounts
+The container mounts:
+- `/proc` - Process metrics
+- `/sys` - System metrics
+- `/` - Root filesystem
+- Custom config directory
+
+### Command Flags
+Node Exporter runs with:
+```
+--path.procfs=/host/proc
+--path.sysfs=/host/sys
+--path.rootfs=/rootfs
+```
+- Filters out system mount points from filesystem metrics
+
+## Access
+
+After deployment, Node Exporter metrics will be available at:
+```
+http://<host>:9100/metrics
+```
+
+## Verification
+
+Check container status:
+```
+docker ps -f name=node_exporter
+```
+
+Check metrics:
+```
+curl http://localhost:9100/metrics
+```
+
+## Maintenance
+
+### Restarting
+```
+docker restart node_exporter
+```
+
+### Upgrading
+Change the `node_exporter_version` variable and re-run the playbook.
+
+### Removing
+```
+docker stop node_exporter
+docker rm node_exporter
+```
