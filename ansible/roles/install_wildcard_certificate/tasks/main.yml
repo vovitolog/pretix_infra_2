@@ -6,14 +6,15 @@
     fail_msg: "Please locate  yc_cert_id"
     success_msg: "yc_cert_id found"
 
-- name: "Install dependencies"
-  become: yes
-  ansible.builtin.apt:
-    name:
-      - python3-jwt
-      - python3-cryptography
-    state: present
-  when: ansible_facts['pkg_mgr'] == 'apt'
+# Dependencies  will be added to dev cloud-init
+#- name: "Install dependencies"
+#  become: yes
+#  ansible.builtin.apt:
+#    name:
+#      - python3-jwt
+#      - python3-cryptography
+#    state: present
+#  when: ansible_facts['pkg_mgr'] == 'apt'
 
 - name: "Load service accout key"
   ansible.builtin.set_fact:
@@ -30,31 +31,11 @@
   changed_when: false
 
 - name: "Generate JWT token"
-  ansible.builtin.command: |
-    python3 -c '
-    import jwt, time, json, sys
-    with open("/tmp/sa_key.json") as f:
-        key_data = json.load(f)
-    
-    # Очистка приватного ключа от лишних строк
-    private_key = key_data["private_key"]
-    if "PLEASE DO NOT REMOVE" in private_key:
-        private_key = "\n".join(private_key.split("\n")[1:])
-    
-    print(jwt.encode(
-        {
-            "iss": key_data["service_account_id"],
-            "aud": "{{ yc_iam_api_url }}",
-            "iat": int(time.time()),
-            "exp": int(time.time()) + {{ token_lifetime }},
-            "kid": key_data["id"]
-        },
-        private_key,
-        algorithm="PS256",
-        headers={"alg": "PS256", "typ": "JWT", "kid": key_data["id"]}
-    ))'
+  generate_yc_jwt:
+    key_file: "/tmp/sa_key.json"
+    iam_api_url: "{{ yc_iam_api_url }}"
+    token_lifetime: "{{ token_lifetime }}"
   register: jwt_token
-  changed_when: false
   no_log: true
 
 - name: "Remove tmp key file"
@@ -69,7 +50,7 @@
     headers:
       Content-Type: "application/json"
     body:
-      jwt: "{{ jwt_token.stdout }}"
+      jwt: "{{ jwt_token.jwt_token }}"
     body_format: json
     return_content: yes
   register: iam_token
