@@ -34,7 +34,7 @@ global_loki_config_deploy: true
 global_loki_http_port: "3100"
 global_loki_container_restart_policy: "unless-stopped"
 global_loki_container_uid: "10001"
-global_loki_hostname: 192.168.1.201 ### 84.201.148.178
+global_loki_hostname: 84.201.148.178
 
 # Prometheus
 
