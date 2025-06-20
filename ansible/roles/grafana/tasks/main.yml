@@ -1,55 +1,87 @@
 ---
-- name: Create directory for Grafana storage
-  file:
-    path: "{{ grafana_path }}/data"
-    state: directory
-    owner: 472
-    mode: '0700'
+- name: Create Docker volume for Grafana data
+  community.docker.docker_volume:
+    name: grafana_data
+    driver: local
+    labels:
+      app: grafana
+      service: grafana
 
-- name: Create directory for Grafana etc
-  file:
-    path: "{{ grafana_path }}/etc/provisioning/datasources"
-    state: directory
-    mode: '0755'
+- name: Create Docker volume for Grafana logs
+  community.docker.docker_volume:
+    name: grafana_logs
+    driver: local
+    labels:
+      app: grafana
+      service: grafana
 
-- name: Copy Grafana configuration file from template
-  template:
-    src: grafana.ini.j2
-    dest: "{{ grafana_path }}/etc/grafana.ini"
-    mode: '0644'
+- name: Ensure provisioning directory structure exists
+  ansible.builtin.file:
+    path: "{{ grafana_provisioning_dir }}/{{ item }}"
+    state: directory
+    mode: "0755"
+    # owner: "{{ grafana_container_uid }}"
+    # group: "{{ grafana_container_uid }}"
+  loop:
+    - "datasources"
+    - "dashboards"
+    - "notifiers"
+
+- name: Deploy provisioning configs
+  ansible.builtin.copy:
+    src: "files/provisioning/"
+    dest: "{{ grafana_provisioning_dir }}"
+    mode: "0644"
+    # owner: "{{ grafana_container_uid }}"
+    # group: "{{ grafana_container_uid }}"
+  when: provisioning_configs_deploy
   notify: Restart Grafana
 
-- name: Copy Grafana provisioning file from template
-  template:
-    src: ds.yaml.j2
-    dest: "{{ grafana_path }}/etc/provisioning/datasources/ds.yaml"
-    mode: '0644'
-  notify: Restart Grafana
-
-- name: Create Docker network
+- name: Ensure Docker network exists
   community.docker.docker_network:
     name: "{{ grafana_docker_network }}"
-    state: present
+    driver: bridge
+    attachable: true
+    labels:
+      app: grafana
 
-- name: Run Grafana container
-  docker_container:
-    name: grafana
-    image: "grafana/grafana-oss:{{ grafana_version }}"
+- name: Deploy Grafana container
+  community.docker.docker_container:
+    name: "{{ grafana_container_name }}"
+    image: "{{ grafana_image }}:{{ grafana_version }}"
+    env:
+      GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+      GF_SECURITY_DISABLE_INITIAL_ADMIN_PASSWORD_HINT: "true"
+      GF_SERVER_DOMAIN: "{{ grafana_domain }}"
+      GF_DATABASE_TYPE: "sqlite3"
+      GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
     ports:
       - "{{ grafana_http_port }}:3000"
     volumes:
-      - "{{ grafana_path }}/etc:/etc/grafana"
-      - "{{ grafana_path }}/data:/var/lib/grafana"
+      - "grafana_data:/var/lib/grafana"
+      - "grafana_logs:/var/log/grafana"
+      - "{{ grafana_provisioning_dir }}:/etc/grafana/provisioning:ro"
     networks:
       - name: "{{ grafana_docker_network }}"
-    restart_policy: unless-stopped
+    restart_policy: "{{ grafana_container_restart_policy }}"
+    user: "{{ grafana_container_uid }}"
+    labels:
+      app: grafana
+      monitoring: "true"
     state: started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-- name: Ensure Grafana is running
-  docker_container_info:
+- name: Verify Grafana container status
+  community.docker.docker_container_info:
     name: grafana
   register: grafana_container_info
+  changed_when: false
 
-- name: Display Grafana container status
-  debug:
-    var: grafana_container_info.container.State.Status
+- name: Display Grafana service status
+  ansible.builtin.debug:
+    msg: "Grafana is {{ grafana_container_info.container.State.Status }} ({{ grafana_container_info.container.State.Health.Status if grafana_container_info.container.State.Health is defined else 'no healthcheck' }})"

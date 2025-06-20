@@ -11,10 +11,16 @@ ansible_python_interpreter: /usr/bin/python3
 yc_lockbox_secret_id_grafana_admin_password: "e6qehuuur2gkrbffbkra"
 
 # Grafana
-global_grafana_version: 12.0.1-ubuntu
-global_grafana_path: /opt/grafana
-global_grafana_http_port: "3001"
-global_grafana_docker_network: "monitoring"
+global_grafana_version: "12.0.1-ubuntu"
+global_grafana_image: "grafana/grafana-oss"
+global_grafana_container_name: "grafana"
+global_grafana_container_uid: "472"
+global_grafana_container_restart_policy: "unless-stopped"
+global_grafana_docker_network: "monitoring_net"
+global_grafana_http_port: "3000"
+global_grafana_domain: "pretix.devops-factory.com"
+global_grafana_provisioning_dir: "{{ ansible_user_dir }}/grafana/provisioning"
+global_provisioning_configs_deploy: false
 global_grafana_admin_user: "admin"
 # global_grafana_admin_password: "{{ vault_grafana_admin_password }}"
 

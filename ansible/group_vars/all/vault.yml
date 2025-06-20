@@ -4,7 +4,7 @@
 # PostgreSQL
 
 # Grafana
-# vault_grafana_admin_password: admin
+# vault_grafana_admin_password: ""
 
 # Prometheus
 

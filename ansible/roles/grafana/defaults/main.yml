@@ -1,10 +1,17 @@
 ---
-grafana_version: 12.0.1-ubuntu
-grafana_path: /opt/grafana
+grafana_version: "12.0.1-ubuntu"
+grafana_image: "grafana/grafana-oss"
+
+grafana_container_name: "grafana"
+grafana_container_uid: "472"
+grafana_container_restart_policy: "unless-stopped"
+
+grafana_docker_network: "monitoring_net"
 grafana_http_port: "3000"
-grafana_docker_network: "grafana-net"
+grafana_domain: "localhost"
+
+grafana_provisioning_dir: "/opt/grafana/provisioning"
+provisioning_configs_deploy: false
+
 grafana_admin_user: "admin"
-loki_hostname: loki
-loki_http_port: "3100"
-prometheus_hostname: prometheus
-prometheus_http_port: "9090"
+# grafana_admin_password: ""  # Must be defined in group_vars/vault.yml
