@@ -10,7 +10,7 @@
     alloy_version: "v1.9.1"
     alloy_http_port: "12345"
     alloy_container_restart_policy: "unless-stopped"
-    alloy_loki_hostname: "192.168.1.201"
+    alloy_loki_hostname: "loki"
     alloy_loki_http_port: "3100"
     alloy_container_uid: "473"
     alloy_container_groups:
