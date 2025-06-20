@@ -16,14 +16,17 @@ The role defines several variables that can be overridden to customize the deplo
    Variable | Description | Default Value |
  |----------|-------------|---------------|
  | `grafana_version` | The version of Grafana to deploy. | `"12.0.1-ubuntu"` |
- | `grafana_path` | The directory path where Grafana will store its data and configuration. | `"/opt/grafana"` |
+ | `grafana_image` | The Docker image to use for Grafana. | `"grafana/grafana-oss"` |
+ | `grafana_container_name` | The name of the Grafana container. | `"grafana"` |
+ | `grafana_container_uid` | The user ID under which Grafana runs inside the container. | `"472"` |
+ | `grafana_container_restart_policy` | The restart policy for the Grafana container. | `"unless-stopped"` |
+ | `grafana_docker_network` | Docker network for Grafana. | `"monitoring_net"` |
  | `grafana_http_port` | HTTP port for Grafana. | `"3000"` |
- | `grafana_docker_network` | Docker network for Grafana. | `"grafana-net"` |
+ | `grafana_domain` | Domain for accessing Grafana. | `"localhost"` |
+ | `grafana_provisioning_dir` | Directory path for Grafana provisioning configurations. | `"/opt/grafana/provisioning"` |
+ | `provisioning_configs_deploy` | Whether to deploy provisioning configurations. | `false` |
  | `grafana_admin_user` | Grafana admin username. | `"admin"` |
- | `loki_hostname` | Hostname for Loki datasource. | `"loki"` |
- | `loki_http_port` | HTTP port for Loki. | `"3100"` |
- | `prometheus_hostname` | Hostname for Prometheus datasource. | `"prometheus"` |
- | `prometheus_http_port` | HTTP port for Prometheus. | `"9090"` |
+ | `grafana_admin_password` | Grafana admin password. |  |
 
 ## Dependencies
 
@@ -39,21 +42,60 @@ This role assumes that Docker is already installed on the target system. You can
 
 To use this role, create a playbook that includes the role. Here is an example playbook:
 
+For become: true
 ```yaml
 ---
 - name: Deploy of Grafana using Docker containers
   hosts: grafana_server
   become: true
   vars:
-    grafana_version: 12.0.1-ubuntu
-    grafana_path: /opt/grafana
+    grafana_version: "12.0.1-ubuntu"
+    grafana_image: "grafana/grafana-oss"
+
+    grafana_container_name: "grafana"
+    grafana_container_uid: "472"
+    grafana_container_restart_policy: "unless-stopped"
+
+    grafana_docker_network: "monitoring_net"
     grafana_http_port: "3000"
-    grafana_docker_network: "grafana-net"
+    grafana_domain: "localhost"
+
+    grafana_provisioning_dir: "/opt/grafana/provisioning"
+    provisioning_configs_deploy: false
+
     grafana_admin_user: "admin"
-    loki_hostname: loki
-    loki_http_port: "3100"
-    prometheus_hostname: prometheus
-    prometheus_http_port: "9090"
+    grafana_admin_password: "admin_qwerty"
+
+  roles:
+    - grafana
+
+```
+
+For become: false
+
+```yaml
+---
+- name: Deploy of Grafana using Docker containers
+  hosts: grafana_server
+  become: false
+  vars:
+    grafana_version: "12.0.1-ubuntu"
+    grafana_image: "grafana/grafana-oss"
+
+    grafana_container_name: "grafana"
+    grafana_container_uid: "472"
+    grafana_container_restart_policy: "unless-stopped"
+
+    grafana_docker_network: "monitoring_net"
+    grafana_http_port: "3000"
+    grafana_domain: "localhost"
+
+    grafana_provisioning_dir: "{{ ansible_user_dir }}/grafana/provisioning"
+    provisioning_configs_deploy: false
+
+    grafana_admin_user: "admin"
+    grafana_admin_password: "admin_qwerty"
+
   roles:
     - grafana
 
