@@ -1,4 +1,4 @@
 ---
-- import_playbook: setup_grafana.yml
+# - import_playbook: setup_grafana.yml
 - import_playbook: setup_loki.yml
 - import_playbook: setup_alloy.yml
