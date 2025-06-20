@@ -1,21 +1,34 @@
 ---
-- name: Create directory for Alloy etc
-  file:
-    path: "{{ alloy_path }}/etc/provisioning/datasources"
-    state: directory
-    mode: '0755'
-
-- name: Copy Alloy configuration file from template
-  template:
-    src: config.alloy.j2
-    dest: "{{ alloy_path }}/etc/config.alloy"
-    mode: '0644'
-  notify: Restart Alloy
-
-- name: Create Docker network
+- name: Ensure Docker network exists
   community.docker.docker_network:
     name: "{{ alloy_docker_network }}"
+    driver: bridge
+    attachable: true
     state: present
+
+- name: Ensure Alloy volume exists
+  community.docker.docker_volume:
+    name: "{{ alloy_volume }}"
+    driver: local
+    labels:
+      app: alloy
+      service: alloy
+    state: present
+
+- name: Ensure Alloy config directory exists
+  ansible.builtin.file:
+    path: "{{ alloy_etc }}"
+    state: directory
+    mode: "0755"
+  when: alloy_config_deploy
+
+- name: Deploy Alloy configuration file from template
+  template:
+    src: config.alloy.j2
+    dest: "{{ alloy_etc }}/config.alloy"
+    mode: '0644'
+  when: alloy_config_deploy
+  notify: Restart Alloy
 
 - name: Run Alloy container
   docker_container:
@@ -24,10 +37,10 @@
     ports:
       - "{{ alloy_http_port }}:12345"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "{{ alloy_volume }}:/var/lib/alloy/data"
+      - "{{ alloy_etc }}/config.alloy:/etc/alloy/config.alloy:ro"
       - /var/log:/var/log:ro
-      - "{{ alloy_path }}/etc/config.alloy:/etc/alloy/config.alloy:ro"
-      - "{{ alloy_path }}/data:/var/lib/alloy/data"
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
@@ -35,9 +48,20 @@
       - /etc/alloy/config.alloy
     networks:
       - name: "{{ alloy_docker_network }}"
-    restart_policy: unless-stopped
-    state: started
     hostname: "{{ ansible_hostname }}"
+    restart_policy: "{{ alloy_container_restart_policy }}"
+    user: "{{ alloy_container_uid }}"
+    groups: "{{ alloy_container_groups }}"
+    labels:
+      app: alloy
+      monitoring: "true"
+    state: started
+    # healthcheck:
+    #   test: ["CMD", "wget", "--spider", "-q", "http://localhost:12345/-/ready"]
+    #   interval: "30s"
+    #   timeout: "10s"
+    #   retries: 3
+    #   start_period: "30s"
 
 - name: Ensure Alloy is running
   docker_container_info:

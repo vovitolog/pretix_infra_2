@@ -25,6 +25,7 @@ loki.source.journal "journal" {
 	forward_to    = [loki.write.default.receiver]
 	labels        = {
 		job = "systemd-journal",
+        instance = env("HOSTNAME"),
 	}
 }
 
@@ -57,14 +58,18 @@ loki.source.docker "docker" {
 	refresh_interval = "5s"
 	labels        = {
 		job = "docker",
-		host = env("HOSTNAME"),
+        instance = env("HOSTNAME"),
 	}
 
 }
 
 loki.write "default" {
-	endpoint {
-		url = "http://{{ loki_hostname }}:{{ loki_http_port }}/loki/api/v1/push"
-	}
-	external_labels = {}
+    endpoint {
+        url = "http://{{ alloy_loki_hostname }}:{{ alloy_loki_http_port }}/loki/api/v1/push"
+        // basic_auth { username = "user",  password = "pass", }
+    }
+    external_labels = {
+        cluster = "pretix",
+    }
 }
+
