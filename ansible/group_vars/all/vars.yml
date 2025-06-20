@@ -20,7 +20,7 @@ global_grafana_docker_network: "monitoring"
 global_grafana_http_port: "3000"
 global_grafana_domain: "pretix.devops-factory.com"
 global_grafana_provisioning_dir: "{{ ansible_user_dir }}/grafana/provisioning"
-global_provisioning_configs_deploy: false
+global_grafana_config_deploy: true
 global_grafana_admin_user: "admin"
 # global_grafana_admin_password: "{{ vault_grafana_admin_password }}"
 
@@ -34,11 +34,21 @@ global_loki_config_deploy: true
 global_loki_http_port: "3100"
 global_loki_container_restart_policy: "unless-stopped"
 global_loki_container_uid: "10001"
+global_loki_hostname: 192.168.1.201 ### 84.201.148.178
 
 # Prometheus
 
 # Alloy
-global_alloy_version: "v1.9.1"
-global_alloy_path: "/opt/alloy"
 global_alloy_docker_network: "monitoring"
+global_alloy_volume: "alloy_data"
+global_alloy_etc: "{{ ansible_user_dir }}/alloy/etc"
+global_alloy_config_deploy: true
+global_alloy_version: "v1.9.1"
 global_alloy_http_port: "12345"
+global_alloy_container_restart_policy: "unless-stopped"
+global_alloy_loki_hostname: "loki"
+global_alloy_loki_http_port: "3100"
+global_alloy_container_uid: "473"
+global_alloy_container_groups:
+  - "990"
+  - "999"

@@ -25,7 +25,7 @@
   loop:
     - "datasources"
     - "dashboards"
-    - "notifiers"
+    - "alerting"
 
 - name: Deploy provisioning configs
   ansible.builtin.copy:
@@ -34,7 +34,15 @@
     mode: "0644"
     # owner: "{{ grafana_container_uid }}"
     # group: "{{ grafana_container_uid }}"
-  when: provisioning_configs_deploy
+  when: grafana_config_deploy
+  notify: Restart Grafana
+
+- name: Copy Grafana provisioning datasources file from template
+  template:
+    src: ds.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/datasources/ds.yml"
+    mode: '0644'
+  when: grafana_config_deploy
   notify: Restart Grafana
 
 - name: Ensure Docker network exists
@@ -42,8 +50,7 @@
     name: "{{ grafana_docker_network }}"
     driver: bridge
     attachable: true
-    labels:
-      app: grafana
+    state: present
 
 - name: Deploy Grafana container
   community.docker.docker_container:

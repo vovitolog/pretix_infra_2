@@ -24,7 +24,9 @@ The role defines several variables that can be overridden to customize the deplo
  | `grafana_http_port` | HTTP port for Grafana. | `"3000"` |
  | `grafana_domain` | Domain for accessing Grafana. | `"localhost"` |
  | `grafana_provisioning_dir` | Directory path for Grafana provisioning configurations. | `"/opt/grafana/provisioning"` |
- | `provisioning_configs_deploy` | Whether to deploy provisioning configurations. | `false` |
+ | `grafana_config_deploy` | Whether to deploy provisioning configurations. | `false` |
+ | `grafana_loki_hostname` | Hostname for Loki datasource. | `"loki"` |
+ | `grafana_loki_http_port` | HTTP port for Loki. | `"3100"` |
  | `grafana_admin_user` | Grafana admin username. | `"admin"` |
  | `grafana_admin_password` | Grafana admin password. |  |
 

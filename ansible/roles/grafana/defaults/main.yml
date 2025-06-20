@@ -11,7 +11,10 @@ grafana_http_port: "3000"
 grafana_domain: "localhost"
 
 grafana_provisioning_dir: "/opt/grafana/provisioning"
-provisioning_configs_deploy: false
+grafana_config_deploy: false
+
+grafana_loki_hostname: "loki"
+grafana_loki_http_port: "3100"
 
 grafana_admin_user: "admin"
 # grafana_admin_password: ""  # Must be defined in group_vars/vault.yml
