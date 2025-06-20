@@ -4,9 +4,6 @@
     name: "{{ loki_docker_network }}"
     driver: bridge
     attachable: true
-    labels:
-      app: loki
-      monitoring: "true"
     state: present
 
 - name: Ensure Loki volume exists
