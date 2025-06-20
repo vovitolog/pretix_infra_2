@@ -1,0 +1,75 @@
+discovery.relabel "journal" {
+	targets = []
+
+	rule {
+		source_labels = ["__journal__hostname"]
+		target_label  = "host"
+	}
+
+	rule {
+		source_labels = ["__journal__systemd_unit"]
+		target_label  = "service"
+	}
+
+	rule {
+		source_labels = ["__journal_syslog_identifier"]
+		target_label  = "component"
+	}
+
+}
+
+loki.source.journal "journal" {
+	max_age       = "12h0m0s"
+	path          = "/var/log/journal"
+	relabel_rules = discovery.relabel.journal.rules
+	forward_to    = [loki.write.default.receiver]
+	labels        = {
+		job = "systemd-journal",
+        instance = env("HOSTNAME"),
+	}
+}
+
+discovery.docker "docker" {
+	host             = "unix:///var/run/docker.sock"
+	refresh_interval = "5s"
+}
+
+loki.process "docker" {
+	forward_to = [loki.write.default.receiver]
+
+	stage.docker { }
+}
+
+discovery.relabel "docker" {
+	targets = []
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+}
+
+loki.source.docker "docker" {
+	host             = "unix:///var/run/docker.sock"
+	targets          = discovery.docker.docker.targets
+	forward_to       = [loki.process.docker.receiver]
+	relabel_rules    = discovery.relabel.docker.rules
+	refresh_interval = "5s"
+	labels        = {
+		job = "docker",
+        instance = env("HOSTNAME"),
+	}
+
+}
+
+loki.write "default" {
+    endpoint {
+        url = "http://{{ alloy_loki_hostname }}:{{ alloy_loki_http_port }}/loki/api/v1/push"
+        // basic_auth { username = "user",  password = "pass", }
+    }
+    external_labels = {
+        cluster = "pretix",
+    }
+}
+

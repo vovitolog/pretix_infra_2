@@ -1,0 +1,19 @@
+---
+- name: Setup Alloy on all servers
+  hosts: all
+  become: false
+
+  roles:
+    - role: alloy
+      vars:
+        alloy_docker_network: "{{ global_alloy_docker_network }}"
+        alloy_volume: "{{ global_alloy_volume }}"
+        alloy_etc: "{{ global_alloy_etc }}"
+        alloy_config_deploy: "{{ global_alloy_config_deploy }}"
+        alloy_version: "{{ global_alloy_version }}"
+        alloy_http_port: "{{ global_alloy_http_port }}"
+        alloy_container_restart_policy: "{{ global_alloy_container_restart_policy }}"
+        alloy_loki_hostname: "{{ global_loki_hostname }}"
+        alloy_loki_http_port: "{{ global_loki_http_port }}"
+        alloy_container_uid: "{{ global_alloy_container_uid }}"
+        alloy_container_groups: "{{ global_alloy_container_groups }}"

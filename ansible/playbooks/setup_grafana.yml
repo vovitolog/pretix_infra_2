@@ -1,0 +1,44 @@
+---
+- name: Setup Grafana on monitoring server
+  hosts: monitoring
+  become: false
+
+  tasks:
+    - name: Check YC_TOKEN environment variable
+      fail:
+        msg: "The YC_TOKEN environment variable is not set !!!"
+      when: lookup('env', 'YC_TOKEN') == ''
+
+    - name: Get Grafana admin password from Yandex Lockbox
+      uri:
+        url: "https://payload.lockbox.api.cloud.yandex.net/lockbox/v1/secrets/{{ yc_lockbox_secret_id_grafana_admin_password }}/payload"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ lookup('env', 'YC_TOKEN') }}"
+        return_content: yes
+      register: lockbox_grafana
+      no_log: true
+
+    - name: Set Grafana admin password fact
+      set_fact:
+        global_grafana_admin_password: "{{ (lockbox_grafana.json.entries | selectattr('key', 'equalto', 'admin') | first).textValue }}"
+      no_log: true
+
+    - name: Include Grafana role
+      include_role:
+        name: grafana
+      vars:
+        grafana_version: "{{ global_grafana_version }}"
+        grafana_image: "{{ global_grafana_image }}"
+        grafana_container_name: "{{ global_grafana_container_name }}"
+        grafana_container_uid: "{{ global_grafana_container_uid }}"
+        grafana_container_restart_policy: "{{ global_grafana_container_restart_policy }}"
+        grafana_docker_network: "{{ global_grafana_docker_network }}"
+        grafana_http_port: "{{ global_grafana_http_port }}"
+        grafana_domain: "{{ global_grafana_domain }}"
+        grafana_provisioning_dir: "{{ global_grafana_provisioning_dir }}"
+        grafana_config_deploy: "{{ global_grafana_config_deploy }}"
+        grafana_loki_hostname: "{{ global_loki_hostname }}"
+        grafana_loki_http_port: "{{ global_loki_http_port }}"
+        grafana_admin_user: "{{ global_grafana_admin_user }}"
+        grafana_admin_password: "{{ global_grafana_admin_password }}"

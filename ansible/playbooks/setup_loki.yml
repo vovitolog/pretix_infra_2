@@ -1,0 +1,17 @@
+---
+- name: Setup Loki on monitoring server
+  hosts: monitoring
+  become: false
+
+  roles:
+    - role: loki
+      vars:
+        loki_image: "{{ global_loki_image }}"
+        loki_version: "{{ global_loki_version }}"
+        loki_docker_network: "{{ global_loki_docker_network }}"
+        loki_volume: "{{ global_loki_volume }}"
+        loki_etc: "{{ global_loki_etc }}"
+        loki_config_deploy: "{{ global_loki_config_deploy }}"
+        loki_http_port: "{{ global_loki_http_port }}"
+        loki_container_restart_policy: "{{ global_loki_container_restart_policy }}"
+        loki_container_uid: "{{ global_loki_container_uid }}"

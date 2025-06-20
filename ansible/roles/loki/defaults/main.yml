@@ -1,2 +1,10 @@
 ---
-# defaults file for loki
+loki_image: "grafana/loki"
+loki_version: "3.5.1"
+loki_docker_network: "monitoring_net"
+loki_volume: "loki_data"
+loki_etc: "/opt/loki/etc"
+loki_config_deploy: true
+loki_http_port: "3100"
+loki_container_restart_policy: "unless-stopped"
+loki_container_uid: "10001"

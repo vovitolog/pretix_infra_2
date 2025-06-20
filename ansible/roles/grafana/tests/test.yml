@@ -1,5 +1,27 @@
 ---
-- hosts: localhost
-  remote_user: root
+- name: Test Grafana deployment
+  hosts: localhost
+  become: true
+  vars:
+    grafana_version: "12.0.1-ubuntu"
+    grafana_image: "grafana/grafana-oss"
+
+    grafana_container_name: "grafana"
+    grafana_container_uid: "472"
+    grafana_container_restart_policy: "unless-stopped"
+
+    grafana_docker_network: "monitoring_net"
+    grafana_http_port: "3000"
+    grafana_domain: "localhost"
+
+    grafana_provisioning_dir: "/opt/grafana/provisioning"
+    grafana_config_deploy: false
+
+    grafana_loki_hostname: "loki"
+    grafana_loki_http_port: "3100"
+
+    grafana_admin_user: "admin"
+    grafana_admin_password: "admin_qwerty"  # Must be redefined in group_vars/vault.yml
+
   roles:
     - grafana

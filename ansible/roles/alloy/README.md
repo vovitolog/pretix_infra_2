@@ -1,38 +1,95 @@
-Role Name
-=========
+# Ansible Role: Alloy Configuration and Deployment
 
-A brief description of the role goes here.
+This Ansible role is designed to set up and configure Alloy, a time series database, using Docker. It includes tasks to create necessary directories, copy configuration files, and run the Alloy container.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.15 or higher
+- Target machines running Ubuntu 24.04
+- Target machines with Docker installed
+- SSH access to the target machines
+- Sudo privileges on the target machines
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+The role defines several variables that can be overridden to customize the deployment process. These variables are defined in `defaults/main.yml`:
+   Variable | Description | Default Value |
+ |----------|-------------|---------------|
+ | `alloy_version` | The version of Alloy to deploy. | `"v1.9.1"` |
+ | `alloy_path` | The directory path where Alloy will store its data and configuration. | `"/opt/alloy"` |
+ | `alloy_docker_network` | Docker network for Alloy. | `"monitoring_net"` |
+ | `alloy_volume` | Docker volume for Alloy data. | `"alloy_data"` |
+ | `alloy_etc` | Directory path for Alloy configuration files. | `"/opt/alloy/etc"` |
+ | `alloy_config_deploy` | Flag to deploy Alloy configuration. | `true` |
+ | `alloy_http_port` | HTTP port for Alloy. | `"12345"` |
+ | `alloy_container_restart_policy` | Restart policy for the Alloy container. | `"unless-stopped"` |
+ | `alloy_loki_hostname` | Hostname for Loki datasource. | `"loki"` |
+ | `alloy_loki_http_port` | HTTP port for Loki. | `"3100"` |
+ | `alloy_container_uid` | UID for the Alloy container user. | `"473"` |
+ | `alloy_container_groups` | List of groups for the Alloy container user. | `["990", "999"]` |
 
-Dependencies
-------------
+## Dependencies
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+This role assumes that Docker is already installed on the target system. You can use the `docker` role to ensure Docker is installed:
 
-Example Playbook
-----------------
+```yaml
+- name: Ensure Docker is installed
+  include_role:
+    name: docker
+```
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+## Example Playbook
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+To use this role, create a playbook that includes the role. Here is an example playbook:
 
-License
--------
+For become: true
 
-BSD
+```yaml
+---
+- name: Deploy of Alloy using Docker containers
+  hosts: all
+  become: true
+  vars:
+    alloy_docker_network: "monitoring_net"
+    alloy_volume: "alloy_data"
+    alloy_etc: "/opt/alloy/etc"
+    alloy_config_deploy: true
+    alloy_version: "v1.9.1"
+    alloy_http_port: "12345"
+    alloy_container_restart_policy: "unless-stopped"
+    alloy_loki_hostname: "loki"
+    alloy_loki_http_port: "3100"
+    alloy_container_uid: "473"
+    alloy_container_groups:
+      - "990"
+      - "999"
+  roles:
+    - alloy
 
-Author Information
-------------------
+```
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+For become: false
+
+```yaml
+---
+- name: Deploy of Alloy using Docker containers
+  hosts: all
+  become: false
+  vars:
+    alloy_docker_network: "monitoring_net"
+    alloy_volume: "alloy_data"
+    alloy_etc: "{{ ansible_user_dir }}/alloy/etc"
+    alloy_config_deploy: true
+    alloy_version: "v1.9.1"
+    alloy_http_port: "12345"
+    alloy_container_restart_policy: "unless-stopped"
+    alloy_loki_hostname: "loki"
+    alloy_loki_http_port: "3100"
+    alloy_container_uid: "473"
+    alloy_container_groups:
+      - "990"
+      - "999"
+  roles:
+    - alloy
+
+```

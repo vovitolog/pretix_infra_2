@@ -1,2 +1,5 @@
 ---
-# handlers file for loki
+- name: Restart Loki
+  docker_container:
+    name: loki
+    restart: yes

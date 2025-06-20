@@ -1,2 +1,17 @@
 ---
-# defaults file for docker
+# packages to allow apt to use a repository over HTTPS
+apt_https_packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+  - gnupg-agent
+
+# Docker packages
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-compose-plugin
+  - python3-docker
+  - python3-compose

@@ -1,5 +1,20 @@
 ---
-- hosts: localhost
-  remote_user: root
+- name: Test Alloy deployment
+  hosts: localhost
+  become: true
+  vars:
+    alloy_docker_network: "monitoring_net"
+    alloy_volume: "alloy_data"
+    alloy_etc: "/opt/alloy/etc"
+    alloy_config_deploy: true
+    alloy_version: "v1.9.1"
+    alloy_http_port: "12345"
+    alloy_container_restart_policy: "unless-stopped"
+    alloy_loki_hostname: "loki"
+    alloy_loki_http_port: "3100"
+    alloy_container_uid: "473"
+    alloy_container_groups:
+      - "990"
+      - "999"
   roles:
     - alloy
