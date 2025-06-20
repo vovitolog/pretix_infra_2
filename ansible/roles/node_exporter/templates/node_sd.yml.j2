@@ -1,0 +1,6 @@
+{% for host in groups['all'] %}
+- targets: ['{{ hostvars[host]['internal_ip'] }}:{{ node_exporter_port }}']
+  labels:
+    instance: "{{ host }}"
+    host_type: "{{ hostvars[host]['group_names'] | first }}"
+{% endfor %}

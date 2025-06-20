@@ -1,0 +1,22 @@
+---
+- name: Install and configure Node Exporter on all hosts
+  hosts: monitoring
+  roles:
+  - role: blackbox_exporter
+    vars:
+      
+      # Directory for Blackbox Exporter configuration
+      # blackbox_config_dir: /home/pipeline/monitoring/blackbox
+
+      # Port for Blackbox Exporter metrics endpoint
+      # blackbox_port: 9115
+
+      # Version of Blackbox Exporter
+      # blackbox_version: v0.24.0
+
+      # Directory for Prometheus file_sd configurations
+      # prometheus_file_sd_dir: /home/pipeline/monitoring/prometheus/file_sd
+
+      # Healthcheck endpoint for Pretix
+      # pretix_mvp_healthcheck_url: https://mvp.pretix.devops-factory.com/healthcheck/
+      # pretix_dev_healthcheck_url: http://10.130.0.21/healthcheck/

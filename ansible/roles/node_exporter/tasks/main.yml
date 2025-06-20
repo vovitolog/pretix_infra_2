@@ -45,3 +45,12 @@
       - "--path.sysfs=/host/sys"
       - "--path.rootfs=/rootfs"
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+
+- name: Generate Node Exporter file_sd config
+  ansible.builtin.template:
+    src: node_sd.yml.j2
+    dest: /home/pipeline/monitoring/prometheus/file_sd/node_targets.yml
+    mode: '0775'
+  run_once: true
+  delegate_to: "{{ groups['monitoring'][0] }}"
+  notify: reload prometheus

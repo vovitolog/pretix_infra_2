@@ -43,6 +43,7 @@
     mode: '0755'
   loop:
     - /home/pipeline/monitoring/prometheus
+    - /home/pipeline/monitoring/prometheus/file_sd
     - /home/pipeline/monitoring/alertmanager
     - /home/pipeline/monitoring/grafana
     - /home/pipeline/monitoring/alertmanager/templates

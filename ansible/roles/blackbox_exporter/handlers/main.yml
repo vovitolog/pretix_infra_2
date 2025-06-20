@@ -1,0 +1,14 @@
+---
+- name: restart blackbox
+  community.docker.docker_container:
+    name: blackbox_exporter
+    state: started
+    restart: yes
+  run_once: true
+
+- name: reload prometheus
+  community.docker.docker_container:
+    name: prometheus
+    state: started
+    restart: yes
+  run_once: true

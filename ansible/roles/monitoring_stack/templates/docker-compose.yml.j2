@@ -6,6 +6,7 @@ services:
     volumes:
       - /home/pipeline/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - /home/pipeline/monitoring/prometheus/rules.yml:/etc/prometheus/rules.yml
+      - /home/pipeline/monitoring/prometheus/file_sd/:/etc/prometheus/file_sd/
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -36,15 +37,6 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
     volumes:
       - grafana_data:/var/lib/grafana
-    networks:
-      - monitoring
-    restart: unless-stopped
-
-  blackbox-exporter:
-    image: prom/blackbox-exporter:latest
-    container_name: blackbox-exporter
-    ports:
-      - "9115:9115"
     networks:
       - monitoring
     restart: unless-stopped

@@ -1,0 +1,30 @@
+---
+# User and group for Blackbox Exporter configuration files
+blackbox_user: pipeline
+blackbox_group: pipeline
+
+# Directory for Blackbox Exporter configuration
+blackbox_config_dir: /home/pipeline/monitoring/blackbox
+
+# Port for Blackbox Exporter metrics endpoint
+blackbox_port: 9115
+
+# Version of Blackbox Exporter
+blackbox_version: v0.24.0
+
+# Directory for Prometheus file_sd configurations
+prometheus_file_sd_dir: /home/pipeline/monitoring/prometheus/file_sd
+
+# User and group for Prometheus configuration files
+prometheus_user: pipeline
+prometheus_group: pipeline
+
+# Endpoints for Pretix
+pretix_mvp_healthcheck_url: https://mvp.pretix.devops-factory.com/healthcheck/
+pretix_mvp_frontend_url: https://mvp.pretix.devops-factory.com/
+
+pretix_dev_healthcheck_url: http://10.130.0.21/healthcheck/
+pretix_dev_frontend_url: http://10.130.0.21/
+
+# Endpoints for Grafana
+grafana_healthcheck_url: http://158.160.69.176:3000/healthz
