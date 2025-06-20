@@ -1,51 +1,69 @@
 ---
-- name: Create directory for Loki storage
-  file:
-    path: "{{ loki_path }}/data"
-    state: directory
-    owner: 10001
-    group: 10001
-    mode: '0700'
-
-- name: Create directory for Loki etc
-  file:
-    path: "{{ loki_path }}/etc"
-    state: directory
-    mode: '0755'
-
-- name: Copy Loki configuration
-  template:
-    src: files/loki-config.yml
-    dest: "{{ loki_path }}/etc/local-config.yaml"
-    mode: '0644'
-  notify:
-    - Restart Loki
-
-- name: Create Docker network
+- name: Ensure Docker network exists
   community.docker.docker_network:
     name: "{{ loki_docker_network }}"
+    driver: bridge
+    attachable: true
+    labels:
+      app: loki
+      monitoring: "true"
     state: present
 
-- name: Run Loki Docker container
-  docker_container:
+- name: Ensure Loki volume exists
+  community.docker.docker_volume:
+    name: "{{ loki_volume }}"
+    driver: local
+    labels:
+      app: loki
+      service: loki
+    state: present
+
+- name: Ensure Loki config directory exists
+  ansible.builtin.file:
+    path: "{{ loki_etc }}"
+    state: directory
+    mode: "0755"
+  when: loki_config_deploy
+
+- name: Deploy Loki configuration
+  ansible.builtin.copy:
+    src: "files/loki-config.yml"
+    dest: "{{ loki_etc }}/local-config.yml"
+    mode: "0644"
+  when: loki_config_deploy
+  notify: Restart Loki
+
+- name: Run Loki container
+  community.docker.docker_container:
     name: loki
-    image: "grafana/loki:{{ loki_version }}"
+    image: "{{ loki_image }}:{{ loki_version }}"
     ports:
       - "{{ loki_http_port }}:3100"
     volumes:
-      - "{{ loki_path }}/data:/loki"
-      - "{{ loki_path }}/etc/local-config.yaml:/etc/loki/local-config.yaml"
-    command: -config.file=/etc/loki/local-config.yaml
+      - "{{ loki_volume }}:/loki"
+      - "{{ loki_etc }}:/etc/loki:ro"
+    command: -config.file=/etc/loki/local-config.yml
     networks:
       - name: "{{ loki_docker_network }}"
-    restart_policy: unless-stopped
+    restart_policy: "{{ loki_container_restart_policy }}"
+    user: "{{ loki_container_uid }}"
+    labels:
+      app: loki
+      monitoring: "true"
     state: started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: "30s"
+      timeout: "10s"
+      retries: 3
+      start_period: "30s"
 
-- name: Ensure Loki is running
-  docker_container_info:
+- name: Verify Loki container status
+  community.docker.docker_container_info:
     name: loki
   register: loki_container_info
+  changed_when: false
 
-- name: Display Loki container status
-  debug:
-    var: loki_container_info.container.State.Status
+- name: Display Loki service status
+  ansible.builtin.debug:
+    msg: "Loki is {{ loki_container_info.container.State.Status }} ({{ loki_container_info.container.State.Health.Status if loki_container_info.container.State.Health is defined else 'no healthcheck' }})"
