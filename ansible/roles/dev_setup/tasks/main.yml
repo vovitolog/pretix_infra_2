@@ -16,20 +16,3 @@
     name: rabbitmq-docker
   tags:
     - rabbitmq
-
-- name: Configure SSL and Nginx
-  block:
-
-    - name: Install wildcard SSL certificate
-      import_role:
-        name: install_wildcard_certificate
-      tags:
-        - ssl
-
-    - name: Install and configure Nginx
-      import_role:
-        name: nginx
-      tags:
-        - nginx
-  tags:
-    - nginx-ssl
