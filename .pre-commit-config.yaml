@@ -1,0 +1,63 @@
+---
+repos:
+  # Базовые хуки: удаление лишних пробелов, исправление конца файлов,
+  # проверка YAML
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        files: "\\.(yml|yaml)$"
+
+  # Проверка shell-скриптов с помощью ShellCheck
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
+        files: "\\.(sh)$"
+
+  # Форматирование Python-кода с помощью Black
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: ["--line-length", "88"]
+        files: "\\.(py)$"
+
+  # Проверка стиля Python-кода с помощью Flake8
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        files: "\\.(py)$"
+
+  # Проверка Terraform-конфигураций
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.80.0
+    hooks:
+      - id: terraform_fmt
+        pass_filenames: false
+      - id: terraform_validate
+        pass_filenames: false
+
+  # Проверка Ansible-кода
+  - repo: https://github.com/ansible-community/ansible-lint
+    rev: v6.17.2
+    hooks:
+      - id: ansible-lint
+        files: "\\.(yml|yaml)$"
+
+  # Проверка Dockerfile с помощью Hadolint
+  - repo: https://github.com/AleksaC/hadolint-pre-commit-hook
+    rev: be866b09602e241f76a5ecd52d6a3acaf3fa5e2f
+    hooks:
+      - id: hadolint
+        files: "^Dockerfile$"
+
+  # Проверка Dockerfile с помощью dockerfilelint
+  - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
+    rev: v0.1.0
+    hooks:
+      - id: dockerfilelint
+        files: "^Dockerfile$"

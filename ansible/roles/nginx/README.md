@@ -1,38 +1,38 @@
-Role Name
-=========
+# Deploy IaC component: Web server
 
-A brief description of the role goes here.
+Thats role is for start Nginx in Docker Container
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+On a target instance must be installed Docker. Role doesnt install Docker
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+| Variable             | Comment             |
+|------------------------|----------------------|
+| `image`    | Name of image              |
+| `container_name`  | Name of container   |
+| `ports`    | Host:Conatiner  |
+| `restart_policy` | Policy of restart container          |
+| `list_of_urls` | List urls with proxy addreses for Nginx |
 
-Dependencies
-------------
+## Dependencies
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Должна быть установлена коллекция
+We need to install collection:
+```bash
+ansible-galaxy collection install community.docker
+```
 
-Example Playbook
-----------------
+## How to use
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+We need to add hosts in `inventory.yml` where must be installed role:
+```yaml!
+[mvp]
+mvp_host ansible_host=123.456.78.9
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Run!:
+```bash!
+ansible-playbook playbooks/setup_nginx.yml
+```

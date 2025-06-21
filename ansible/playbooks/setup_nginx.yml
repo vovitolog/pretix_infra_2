@@ -1,1 +1,7 @@
-Тут пока пусто:(
+---
+- name: Deploy Nginx in Docker
+  hosts: mvp
+  collections:
+    - community.docker
+  roles:
+    - nginx

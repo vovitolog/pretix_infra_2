@@ -1,3 +1,4 @@
+---
 groups:
 - name: example
   rules:
@@ -6,6 +7,52 @@ groups:
     for: 1m
     labels:
       severity: critical
+      category: Network
     annotations:
       summary: "Grafana is down"
-      description: "{{ $labels.instance }} is not responding to ping for 1 minutes."
+      description: "{{ $labels.instance }} is not responding to ping for 1 minute."
+  # - alert: HighCPUUsage
+  #   expr: rate(node_cpu_seconds_total{mode="user"}[5m]) > 0.8
+  #   for: 5m
+  #   labels:
+  #     severity: warning
+  #     category: Infrastructure
+  #   annotations:
+  #     summary: "High CPU usage on host"
+  #     description: "CPU usage on {{ $labels.instance }} is above 80% for 5 minutes."
+  # - alert: NetworkLatency
+  #   expr: node_network_receive_bytes_total > 1000000
+  #   for: 5m
+  #   labels:
+  #     severity: warning
+  #     category: Network
+  #   annotations:
+  #     summary: "High network latency"
+  #     description: "Network receive bytes on {{ $labels.instance }} exceeds threshold."
+  # - alert: ApplicationErrorRate
+  #   expr: rate(http_requests_total{status="500"}[5m]) > 0.1
+  #   for: 5m
+  #   labels:
+  #     severity: critical
+  #     category: Application
+  #   annotations:
+  #     summary: "High application error rate"
+  #     description: "Application {{ $labels.instance }} has high 500 error rate."
+  # - alert: DatabaseQuerySlow
+  #   expr: histogram_quantile(0.95, sum(rate(sql_query_duration_seconds_bucket[5m])) by (le)) > 1
+  #   for: 5m
+  #   labels:
+  #     severity: warning
+  #     category: Database
+  #   annotations:
+  #     summary: "Slow database queries"
+  #     description: "Database query duration on {{ $labels.instance }} exceeds 1 second."
+  # - alert: SecurityIncident
+  #   expr: node_filesystem_readonly == 1
+  #   for: 1m
+  #   labels:
+  #     severity: critical
+  #     category: Security
+  #   annotations:
+  #     summary: "Filesystem is read-only"
+  #     description: "Filesystem on {{ $labels.instance }} is in read-only mode."
