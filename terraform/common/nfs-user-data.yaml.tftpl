@@ -45,6 +45,6 @@ runcmd:
   - mkdir -p /srv/nfs-pretix
   - chown nobody:nogroup /srv/nfs-pretix
   - chmod 777 /srv/nfs-pretix
-  - echo "/srv/nfs-pretix ${proxy_cidr}(rw,sync,no_subtree_check) ${dev_cidr}(rw,sync,no_subtree_check)" >> /etc/exports
+  - echo "/srv/nfs-pretix ${proxy_cidr}(rw,sync,no_subtree_check,no_root_squash) ${dev_cidr}(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
   - exportfs -a
   - exportfs -r
