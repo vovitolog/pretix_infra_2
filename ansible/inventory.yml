@@ -1,70 +1,36 @@
 ---
 # Prod
-# mvp:
-#   hosts:
-#     mvp-standalone:
-#       ansible_user: pipeline
-#       ansible_host: mvp.pretix.devops-factory.com
-#       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-#       internal_ip: 10.130.0.33
-
-# dev:
-#   hosts:
-#     dev-standalone:
-#       ansible_user: pipeline
-#       ansible_host: 10.130.0.21
-#       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-#       ansible_ssh_common_args: '-o ProxyJump=pipeline@158.160.110.141 -o ForwardAgent=yes'
-#       internal_ip: 10.130.0.21
-
-# monitoring:
-#   hosts:
-#     main-monitoring:
-#       ansible_user: pipeline
-#       ansible_host: 10.130.4.6
-#       ansible_host: 158.160.189.151
-#       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-#       ansible_ssh_common_args: '-o ProxyJump=pipeline@158.160.110.141 -o ForwardAgent=yes'
-#       internal_ip: 10.130.4.6
-
-# proxy:
-#   hosts:
-#     main-proxy:
-#       ansible_user: pipeline
-#       ansible_host: 158.160.110.141
-#       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-#       internal_ip: 10.130.1.3
-
-# Test
-
 mvp:
   hosts:
     mvp-standalone:
       ansible_user: pipeline
-      ansible_host: 84.201.149.73
+      ansible_host: mvp.pretix.devops-factory.com
       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-      internal_ip: 84.201.149.73
+      internal_ip: 10.130.0.33
 
 dev:
   hosts:
     dev-standalone:
       ansible_user: pipeline
-      ansible_host: 158.160.134.73
+      ansible_host: 10.130.0.21
       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-      internal_ip: 158.160.134.73
+      ansible_ssh_common_args: '-o ProxyJump=pipeline@158.160.110.141 -o ForwardAgent=yes'
+      internal_ip: 10.130.0.21
 
 monitoring:
   hosts:
     main-monitoring:
       ansible_user: pipeline
-      ansible_host: 158.160.190.76
+      ansible_host: 10.130.4.6
+      ansible_host: 158.160.189.151
       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-      internal_ip: 158.160.190.76
+      ansible_ssh_common_args: '-o ProxyJump=pipeline@158.160.110.141 -o ForwardAgent=yes'
+      internal_ip: 10.130.4.6
 
-# proxy:
-#   hosts:
-#     main-proxy:
-#       ansible_user: pipeline
-#       ansible_host: 158.160.110.141
-#       ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
-#       internal_ip: 10.130.1.3
+proxy:
+  hosts:
+    main-proxy:
+      ansible_user: pipeline
+      ansible_host: 158.160.110.141
+      ansible_ssh_private_key_file: ~/.ssh/pipeline-runner-key
+      internal_ip: 10.130.1.3

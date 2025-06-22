@@ -10,6 +10,7 @@
 <blockquote>{{ if .Labels.category }}<b>⚙️ Category:</b> {{ .Labels.category }}{{ end }}
 {{ if .Labels.severity }}<b>⚠️ Level:</b> {{ .Labels.severity }}{{ end }}
 {{ if .Labels.instance }}<b>📍 Target:</b> {{ .Labels.instance }}{{ end }}
+{{ if .Labels.ip }}<b>📍 IP:</b> <code>{{ .Labels.ip }}</code>{{ end }}
 {{ if .Labels.host_type }}<b>📍 Host Group:</b> {{ .Labels.host_type }}{{ end }}
 {{ if .Labels.job }}<b>🧰 Job:</b> {{ .Labels.job }}{{ end }}</blockquote>
 

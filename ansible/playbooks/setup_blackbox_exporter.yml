@@ -1,5 +1,5 @@
 ---
-- name: Install and configure Node Exporter on all hosts
+- name: Install and configure Blackbox Exporter
   hosts: monitoring
   roles:
   - role: blackbox_exporter

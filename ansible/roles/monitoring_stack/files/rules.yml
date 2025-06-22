@@ -12,6 +12,18 @@ groups:
       summary: "Endpoint is down"
       description: "{{ $labels.instance }} is not responding (RESPONSE CODE != 200) for 5 minute."
 
+- name: Instances
+  rules:
+  - alert: HostUnreachable
+    expr: ping_loss_ratio{job="ping"} == 1
+    for: 3m
+    labels:
+      severity: critical
+      category: Network
+    annotations:
+      summary: "Host is unreachable"
+      description: "{{ $labels.instance }} is not responding to ping for 3 minutes."
+
   # - alert: HighCPUUsage
   #   expr: rate(node_cpu_seconds_total{mode="user"}[5m]) > 0.8
   #   for: 5m

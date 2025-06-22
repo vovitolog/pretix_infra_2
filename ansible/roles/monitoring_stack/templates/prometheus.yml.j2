@@ -50,7 +50,7 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: 158.160.190.76:9115
+        replacement: {{ hostvars['main-monitoring']['internal_ip'] }}:9115
 
   - job_name: 'ping'
     file_sd_configs:
@@ -62,4 +62,19 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: 10.130.4.6:9427
+        replacement: {{ hostvars['main-monitoring']['internal_ip'] }}:9427
+    metric_relabel_configs:
+      {%- block relabel_configs %}
+      {%- set _ = "" %}
+      {%- for host in groups['all'] %}
+      
+      - source_labels: [ip]
+        target_label: instance
+        regex: '^{{ hostvars[host].internal_ip|regex_escape() }}$'
+        replacement: '{{ host }}'
+      - source_labels: [ip]
+        target_label: host_type
+        regex: '^{{ hostvars[host].internal_ip|regex_escape() }}$'
+        replacement: '{{ hostvars[host].group_names | first }}'
+      {%- endfor %}
+      {%- endblock %}
