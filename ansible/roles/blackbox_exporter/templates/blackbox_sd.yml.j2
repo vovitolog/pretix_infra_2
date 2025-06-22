@@ -1,0 +1,23 @@
+- targets:
+    - "{{ pretix_mvp_healthcheck_url }}"
+  labels:
+    instance: "pretix_mvp_healthcheck"
+    host_type: "mvp"
+
+- targets:
+    - "{{ pretix_mvp_frontend_url }}"
+  labels:
+    instance: "pretix_mvp_frontend"
+    host_type: "mvp"
+
+- targets:
+    - "{{ pretix_dev_healthcheck_url }}"
+  labels:
+    instance: "pretix_dev_healthcheck"
+    host_type: "dev"
+
+- targets:
+    - "{{ pretix_dev_frontend_url }}"
+  labels:
+    instance: "pretix_dev_frontend"
+    host_type: "dev"

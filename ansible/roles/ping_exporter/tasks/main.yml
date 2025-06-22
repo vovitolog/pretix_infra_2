@@ -1,0 +1,38 @@
+---
+- name: Create Ping Exporter configuration directory
+  ansible.builtin.file:
+    path: "{{ ping_config_dir }}"
+    state: directory
+    mode: '0755'
+  run_once: true
+
+- name: Deploy Ping Exporter configuration
+  ansible.builtin.template:
+    src: ping.yml.j2
+    dest: "{{ ping_config_dir }}/ping.yml"
+    mode: '0644'
+  run_once: true
+  notify: restart ping
+
+- name: Run Ping Exporter container
+  community.docker.docker_container:
+    name: ping_exporter
+    image: "czerwonk/ping_exporter:{{ ping_version }}"
+    state: started
+    restart_policy: unless-stopped
+    published_ports:
+      - "{{ ping_port }}:9427"
+    volumes:
+      - "{{ ping_config_dir }}/ping.yml:/config/config.yml:ro"
+    capabilities:
+      - NET_RAW  # Required for ICMP
+  run_once: true
+
+- name: Generate Ping Exporter file_sd config
+  ansible.builtin.template:
+    src: ping_sd.yml.j2
+    dest: "{{ prometheus_file_sd_dir }}/ping_targets.yml"
+    mode: '0644'
+  run_once: true
+  delegate_to: "{{ groups['monitoring'][0] }}"
+  notify: reload prometheus

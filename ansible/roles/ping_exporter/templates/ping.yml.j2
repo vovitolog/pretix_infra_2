@@ -1,0 +1,16 @@
+targets:
+{% for group in groups %}
+{% if group != 'all' %}
+{% for host in groups[group] %}
+  - {{ hostvars[host].internal_ip }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+dns:
+  refresh: {{ ping_dns_refresh }}
+  nameserver: {{ ping_dns_nameserver }}
+ping:
+  interval: {{ ping_interval }}
+  timeout: {{ ping_timeout }}
+  history-size: {{ ping_history_size }}
+  payload-size: {{ ping_payload_size }}

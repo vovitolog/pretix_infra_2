@@ -1,16 +1,29 @@
 ---
 groups:
-- name: example
+- name: Endpoints
   rules:
-  - alert: GrafanaDown
+  - alert: EndpointDown
     expr: probe_success{job="blackbox"} == 0
-    for: 1m
+    for: 5m
     labels:
       severity: critical
       category: Network
     annotations:
-      summary: "Grafana is down"
-      description: "{{ $labels.instance }} is not responding to ping for 1 minute."
+      summary: "Endpoint is down"
+      description: "{{ $labels.instance }} is not responding (RESPONSE CODE != 200) for 5 minute."
+
+- name: Instances
+  rules:
+  - alert: HostUnreachable
+    expr: ping_loss_ratio{job="ping"} == 1
+    for: 3m
+    labels:
+      severity: critical
+      category: Network
+    annotations:
+      summary: "Host is unreachable"
+      description: "{{ $labels.instance }} is not responding to ping for 3 minutes."
+
   # - alert: HighCPUUsage
   #   expr: rate(node_cpu_seconds_total{mode="user"}[5m]) > 0.8
   #   for: 5m

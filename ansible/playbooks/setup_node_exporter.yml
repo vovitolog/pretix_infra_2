@@ -1,0 +1,15 @@
+---
+- name: Install and configure Node Exporter on all hosts
+  hosts: all
+  roles:
+  - role: node_exporter
+    vars:
+
+      # Directory for Node Exporter configuration
+      # node_exporter_config_dir: /home/pipeline/monitoring/node_exporter
+
+      # Node Exporter version to use
+      # node_exporter_version: 1.8.2
+      
+      # Port for Node Exporter metrics endpoint
+      # node_exporter_port: 9100

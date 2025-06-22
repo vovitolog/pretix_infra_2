@@ -3,13 +3,14 @@
 {{ if eq .Status "firing" }}🚨 <b>WARNING!</b> 🚨
 {{ else if eq .Status "resolved" }}✅ <b>SOLVED!</b> ✅
 {{ else }}ℹ️ <b>INFO</b> ℹ️{{ end }}
-<blockquote><b>ℹ️ Name: {{ if .Labels.alertname }}{{ .Labels.alertname }}{{ else }}Alert{{ end }}</b></blockquote>
+<blockquote><b>ℹ️ Alert: {{ if .Labels.alertname }}{{ .Labels.alertname }}{{ else }}Alert{{ end }}</b></blockquote>
 📅 <b>Time:</b> {{ .StartsAt.Format "02.01.2006 15:04:05" }}
 📌 <b>Status:</b> {{ if eq .Status "firing" }}Active{{ else }}Solved{{ end }}
 
 <blockquote>{{ if .Labels.category }}<b>⚙️ Category:</b> {{ .Labels.category }}{{ end }}
 {{ if .Labels.severity }}<b>⚠️ Level:</b> {{ .Labels.severity }}{{ end }}
-{{ if .Labels.instance }}<b>📍 Source:</b> {{ .Labels.instance }}{{ end }}
+{{ if .Labels.instance }}<b>📍 Target:</b> {{ .Labels.instance }}{{ end }}
+{{ if .Labels.ip }}<b>📍 IP:</b> <code>{{ .Labels.ip }}</code>{{ end }}
 {{ if .Labels.host_type }}<b>📍 Host Group:</b> {{ .Labels.host_type }}{{ end }}
 {{ if .Labels.job }}<b>🧰 Job:</b> {{ .Labels.job }}{{ end }}</blockquote>
 

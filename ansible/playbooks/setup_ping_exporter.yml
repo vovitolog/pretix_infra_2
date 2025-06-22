@@ -1,0 +1,33 @@
+---
+- name: Install and configure Ping Exporter
+  hosts: monitoring
+  roles:
+  - role: ping_exporter
+    vars:
+      
+        # Directory for Ping Exporter configuration
+      # ping_config_dir: /home/pipeline/monitoring/ping
+
+        # Port for Ping Exporter metrics endpoint
+      # ping_port: 9427
+
+        # Version of Ping Exporter
+      # ping_version: 1.1.3
+
+        # Directory for Prometheus file_sd configurations
+      # prometheus_file_sd_dir: /home/pipeline/monitoring/prometheus/file_sd
+
+        # Ping Exporter configuration parameters
+      # ping_targets: "{{ groups['all'] | map('extract', hostvars, 'internal_ip') | list }}"
+      # ping_dns_refresh: 2m15s
+      # ping_dns_nameserver: 1.1.1.1
+      # ping_interval: 2s
+      # ping_timeout: 3s
+      # ping_history_size: 42
+      # ping_payload_size: 120
+
+        # Metrics configuration
+      # metrics_rttunit: ms  # Options: ms, s, both
+      # metrics_deprecated: enable  # Options: enable, disable
+
+

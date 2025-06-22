@@ -43,13 +43,14 @@
     mode: '0755'
   loop:
     - /home/pipeline/monitoring/prometheus
+    - /home/pipeline/monitoring/prometheus/file_sd
     - /home/pipeline/monitoring/alertmanager
     - /home/pipeline/monitoring/grafana
     - /home/pipeline/monitoring/alertmanager/templates
 
 - name: Copy Prometheus configuration file
-  ansible.builtin.copy:
-    src: files/prometheus.yml
+  ansible.builtin.template:
+    src: templates/prometheus.yml.j2
     dest: /home/pipeline/monitoring/prometheus/prometheus.yml
     mode: '0644'
   notify: Restart Prometheus
